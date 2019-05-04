@@ -1,0 +1,1 @@
+- donner la possibilite dans la creation d'un nouveau bot de changer l'archi du NN
