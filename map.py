@@ -9,9 +9,7 @@ class Map:
         self.width = width
         self.depth = depth
 
-    def get_around(
-        self, x_center, y_center, distance
-    ):  # TODO: croper le resultat pour avoir que la partie interressante de randu
+    def get_around(self, x_center, y_center, distance):
         height = self.height
         width = self.width
 
@@ -62,23 +60,23 @@ class Map:
             while self.board[x, y, 0] != 0:
                 x = random.randint(0, self.height - 1)
                 y = random.randint(0, self.height - 1)
-            self.board[x, y, 0] = 2
-            self.board[x, y, 1] = nb_fruits
+            self.board[x, y, 10] = 1
+            self.board[x, y, 11] = nb_fruits
 
     def spawn_outer_walls(self):
         for i in range(self.width):
-            self.board[i, 0] = 3
+            self.board[i, 0] = 2
             self.board[i, self.height - 1] = 3
 
         for i in range(self.height):
-            self.board[0, i] = 3
+            self.board[0, i] = 2
             self.board[self.width - 1, i] = 3
 
     def display(self, board=np.array([]), simple=False):
         if board.shape == (0,):
             board = self.board
 
-        disp_board = board[:, :, 0]
+        disp_board = board[:, :, :]
 
         height = disp_board.shape[0]
         width = disp_board.shape[1]
@@ -93,11 +91,11 @@ class Map:
             for i in range(width):
                 print("|", end="")
                 for j in range(height):
-                    if disp_board[j, i] == 1:  # bot
+                    if disp_board[j, i, 0] == 1:  # bot
                         print("O", end="")
-                    elif disp_board[j, i] == 2:  # tree
+                    elif disp_board[j, i, 10] == 1:  # tree
                         print("T", end="")
-                    elif disp_board[j, i] == 3:  # wall
+                    elif disp_board[j, i, 0] == 2:  # wall
                         print("=", end="")
                     else:
                         print(" ", end="")

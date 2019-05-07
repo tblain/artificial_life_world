@@ -12,9 +12,9 @@ class Simulation:
         self.master = Tk()
         self.w = Canvas(self.master, width=1500, height=900)
         self.w.pack()
-        self.map = Map(300, 300, 3)
+        self.map = Map(200, 200, 12)
         self.map.spawn_outer_walls()
-        self.map.spawn_tree(4000, 10)
+        self.map.spawn_tree(30000, 10)
         self.load_bots(nb_bots, reset=False)
         self.nb_step = 0
         self.next_bots = []
@@ -61,7 +61,9 @@ class Simulation:
                 if bot.g_energy() > 0:
                     bot.step()
                 else:
-                    self.map.board[bot.x, bot.y] = [0, 0, 0]
+                    self.map.board[bot.x, bot.y, 0] = 0
+                    self.map.board[bot.x, bot.y, 1] = 0
+                    self.map.board[bot.x, bot.y, 2] = 0
                     self.bots.remove(bot)
 
             if len(self.bots) < 100:
@@ -88,8 +90,8 @@ class Simulation:
             self.step()
             print()
             print()
-            # self.map.display(simple=False)
-            # time.sleep(0.5)
+            self.map.display(simple=False)
+            time.sleep(0.5)
             if self.nb_step % 10 == 0:
                 self.map.spawn_tree(1, 10)
             self.nb_step += 1
