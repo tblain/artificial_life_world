@@ -1,5 +1,6 @@
 import numpy as np
 import random
+from tkinter import Tk, Canvas, ALL
 
 
 class Map:
@@ -8,6 +9,9 @@ class Map:
         self.height = height
         self.width = width
         self.depth = depth
+        self.master = Tk()
+        self.w = Canvas(self.master, width=500, height=500)
+        self.w.pack()
 
     def get_around(self, x_center, y_center, distance):
         height = self.height
@@ -57,7 +61,7 @@ class Map:
             x = pos[i, 0]
             y = pos[i, 1]
 
-            while self.board[x, y, 0] != 0:
+            while self.board[x, y, 10] != 0:
                 x = random.randint(0, self.height - 1)
                 y = random.randint(0, self.height - 1)
             self.board[x, y, 10] = 1
@@ -72,7 +76,7 @@ class Map:
             self.board[0, i] = 2
             self.board[self.width - 1, i] = 3
 
-    def display(self, board=np.array([]), simple=False):
+    def display(self, x1=0, y1=0, nb_cell_to_display=50, board=np.array([]), style=0):
         if board.shape == (0,):
             board = self.board
 
@@ -81,16 +85,16 @@ class Map:
         height = disp_board.shape[0]
         width = disp_board.shape[1]
 
-        if simple:
+        if style == 0:
             print(disp_board)
-        else:
-            for a in range(-1, width):
+        elif style == 1:
+            for a in range(-1, nb_cell_to_display):
                 print("_", end="")
             print()
 
-            for i in range(width):
+            for i in range(x1, x1 + nb_cell_to_display):
                 print("|", end="")
-                for j in range(height):
+                for j in range(y1, y1 + nb_cell_to_display):
                     if disp_board[j, i, 0] == 1:  # bot
                         print("O", end="")
                     elif disp_board[j, i, 10] == 1:  # tree
@@ -101,21 +105,22 @@ class Map:
                         print(" ", end="")
                 print("|")
 
-            for a in range(-2, width):
+            for a in range(-1, nb_cell_to_display):
                 print("_", end="")
 
             print()
 
-        # rows = self.map.board.shape[0]
-        # cols = self.map.board.shape[1]
-
-        # for x in range(0, rows):
-        #     for y in range(0, cols):
-        #         if self.map.board[x, y] == 1:
-        #             self.w.create_rectangle(
-        #                 x * 10, y * 10, (x + 1) * 10, (y + 1) * 10, fill="blue"
-        #             )
-        #         elif self.map.board[x, y] == -1:
-        #             self.w.create_rectangle(
-        #                 x * 10, y * 10, (x + 1) * 10, (y + 1) * 10, fill="red"
-        #             )
+        elif style == 2:
+            self.w.delete(ALL)
+            for x in range(x1, x1 + nb_cell_to_display):
+                for y in range(y1, y1 + nb_cell_to_display):
+                    if disp_board[x, y, 0] == 1:
+                        self.w.create_rectangle(
+                            x * 10, y * 10, (x + 1) * 10, (y + 1) * 10, fill="blue"
+                        )
+                    elif disp_board[x, y, 10] == 1:
+                        self.w.create_rectangle(
+                            x * 10, y * 10, (x + 1) * 10, (y + 1) * 10, fill="green"
+                        )
+            self.master.update_idletasks()
+            self.master.update()
