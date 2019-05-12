@@ -115,20 +115,14 @@ class Map:
         elif style == 2:
             self.w.delete(ALL)
             size = 20  # size of a square cell
-            if x1 + nb_cell_to_display > self.width:
-                x1 -= self.width - x1 + nb_cell_to_display
-
-            if y1 + nb_cell_to_display > self.height:
-                y1 -= self.height - y1 + nb_cell_to_display
-
-            for x in range(x1, x1 + nb_cell_to_display):
-                for y in range(y1, y1 + nb_cell_to_display):
+            for x in range(x1, x1 + nb_cell_to_display - 1):
+                for y in range(y1, y1 + nb_cell_to_display - 1):
                     if disp_board[x, y, 0] == 1:
                         self.w.create_rectangle(
-                            (x - x1) * size,
-                            (y - y1) * size,
-                            (x - x1 + 1) * size,
-                            (y - y1 + 1) * size,
+                            x * size,
+                            y * size,
+                            (x + 1) * size,
+                            (y + 1) * size,
                             fill="blue",
                         )
                     elif disp_board[x, y, 10] == 1:
@@ -141,10 +135,10 @@ class Map:
                             color = "forest green"
 
                         self.w.create_rectangle(
-                            (x - x1) * size,
-                            (y - y1) * size,
-                            (x - x1 + 1) * size,
-                            (y - y1 + 1) * size,
+                            x * size,
+                            y * size,
+                            (x + 1) * size,
+                            (y + 1) * size,
                             fill=color,
                         )
 

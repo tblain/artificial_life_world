@@ -3,43 +3,23 @@ import numpy as np
 import genetic
 
 
-class Bot:
-    def __init__(self, map, x, y, sim, model=None, train=False):
-        if model:
-            self.model = model
-        else:
-            self.model = NN(11, [20, 20, 8])
-
+class Al_bot:
+    def __init__(self, map, x, y, sim, model=None):
         self.map = map
         self.x = x
         self.y = y
         self.incr_energy(10)
         self.nb_steps = 0
         self.sim = sim
-        self.type = "B"
-
-        self.train = train
-        if train:
-            self.type = "T"
+        self.model = NN(13, [20, 8])
+        self.type = "A"
 
     def step(self):
         if self.g_energy() <= 0:
             return False
         else:
-            # print(self.nb_steps, " | ", end="")
-            # print(self.g_energy(), " | ", end="")
-
             predict = self.predict()
             action = np.argmax(predict)
-
-            if self.train:
-                # print(self.model.weights)
-                albot_actions = self.albot_predict()
-                # print("albot: ", albot_actions)
-                # print("bot  : ", predict)
-                # print("diff : ", predict - albot_actions)
-                # print("weights: ", self.model.weights[0])
-                self.model.fit_on_one(self.g_inputs(), albot_actions, 0.000001)
 
             if action == 0:  # the bot doesn't move
                 self.incr_energy(-1)  # but still lose energy
@@ -90,28 +70,27 @@ class Bot:
 
             elif action == 6:  # duplication / cell mytose
                 if self.g_energy() > 15:
-                    # self.incr_energy(-2)  # loose of energy to make the child
+                    self.incr_energy(-2)  # loose of energy to make the child
                     # energy that will be transfered to the child
                     energy_to_child = self.g_energy() // 2
                     self.incr_energy(-energy_to_child)
-                    new_model = genetic.mutate(self.model.weights, 1, 1)
 
                     # TODO: faire une fonction pour rendre ca plus propre
                     if self.map.board[self.x + 1, self.y, 0] == 0:
                         # TODO: faire une methode pour get un truc dans la map
-                        new_bot = Bot(self.map, self.x + 1, self.y, self.sim, new_model)
+                        new_bot = Al_bot(self.map, self.x + 1, self.y, self.sim)
                         new_bot.s_energy(energy_to_child)
                         self.sim.add_bots([new_bot])
                     elif self.map.board[self.x - 1, self.y, 0] == 0:
-                        new_bot = Bot(self.map, self.x - 1, self.y, self.sim, new_model)
+                        new_bot = Al_bot(self.map, self.x - 1, self.y, self.sim)
                         new_bot.s_energy(energy_to_child)
                         self.sim.add_bots([new_bot])
                     elif self.map.board[self.x, self.y + 1, 0] == 0:
-                        new_bot = Bot(self.map, self.x, self.y + 1, self.sim, new_model)
+                        new_bot = Al_bot(self.map, self.x, self.y + 1, self.sim)
                         new_bot.s_energy(energy_to_child)
                         self.sim.add_bots([new_bot])
                     elif self.map.board[self.x, self.y - 1, 0] == 0:
-                        new_bot = Bot(self.map, self.x, self.y - 1, self.sim, new_model)
+                        new_bot = Al_bot(self.map, self.x, self.y - 1, self.sim)
                         new_bot.s_energy(energy_to_child)
                         self.sim.add_bots([new_bot])
                     else:
@@ -126,6 +105,7 @@ class Bot:
 
             else:
                 print("pas normal")
+
             self.nb_steps += 1
             return True
 
@@ -139,8 +119,8 @@ class Bot:
             if self.map.board[self.x, self.y, 11] == 0:
                 self.map.board[self.x, self.y, 10] = 0
 
-    def move(self, action):
-        self.map.board[self.x + action[0], self.y + action[1], :3] = self.map.board[
+    def move(self, dir):
+        self.map.board[self.x + dir[0], self.y + dir[1], :3] = self.map.board[
             self.x, self.y, :3
         ]
 
@@ -148,8 +128,8 @@ class Bot:
         self.map.board[self.x, self.y, 1] = 0
         self.map.board[self.x, self.y, 2] = 0
 
-        self.x += action[0]
-        self.y += action[1]
+        self.x += dir[0]
+        self.y += dir[1]
         self.incr_energy(-1)  # energy lost by moving
 
     def g_energy(self):
@@ -161,7 +141,7 @@ class Bot:
         self.map.board[self.x, self.y, 1] += nb
 
     def s_energy(self, nb):  # TODO comment
-        self.map.board[self.x, self.y, 1] - nb
+        self.map.board[self.x, self.y, 1] = nb
 
     def s_reproduction(self, repro=True):
         """ set reproduction for the bot to 0 or 1 depending on the repro arg"""
@@ -198,52 +178,34 @@ class Bot:
 
     def g_bot_on_dir(self, dir):
         x_p_dir = self.x + dir[0]
-        y_p_dir = self.y + dir[1]
+        y_p_dir = self.x + dir[1]
         if 0 <= x_p_dir < self.map.width and 0 <= y_p_dir < self.map.height:
             return self.map.board[x_p_dir, y_p_dir, 0]
         else:
-        else:
             return 0
 
-    def g_inputs(self):
-        inputs = np.array([])
-        # self.map.display(self.map.get_around(self.x, self.y, 5))
-        inputs = np.append(inputs, self.g_energy())
-        inputs = np.append(inputs, self.g_nb_fruit_on_pos())
-
-        inputs = np.append(inputs, self.g_nb_fruit_on_dir([0, 1]))
-        inputs = np.append(inputs, self.g_nb_fruit_on_dir([0, -1]))
-        inputs = np.append(inputs, self.g_nb_fruit_on_dir([1, 0]))
-        inputs = np.append(inputs, self.g_nb_fruit_on_dir([-1, 0]))
-
-        inputs = np.append(inputs, self.g_bot_on_dir([1, 0]))
-        inputs = np.append(inputs, self.g_bot_on_dir([-1, 0]))
-        inputs = np.append(inputs, self.g_bot_on_dir([0, 1]))
-        inputs = np.append(inputs, self.g_bot_on_dir([0, -1]))
-        inputs = np.append(inputs, max(self.g_energy() - 15, 0))
-
-        return inputs
-
     def predict(self):
-        inputs = self.g_inputs()
-        return self.model.predict(inputs)
-
-    def albot_predict(self):
         actions = [0, 0, 0, 0, 0, 0, 0, 0]
 
         if self.g_energy() > 300:
-            actions[6] = 1000
-        if self.g_nb_fruit_on_pos() > 0:
-            actions[7] = 100
-
-        actions[1] = self.g_nb_fruit_on_dir([0, -1]) - (
-            self.g_bot_on_dir([0, -1]) * 1000
-        )
-        actions[2] = self.g_nb_fruit_on_dir([0, 1]) - (self.g_bot_on_dir([0, 1]) * 1000)
-        actions[3] = self.g_nb_fruit_on_dir([-1, 0]) - (
-            self.g_bot_on_dir([-1, 0]) * 1000
-        )
-        actions[4] = self.g_nb_fruit_on_dir([1, 0]) - (self.g_bot_on_dir([1, 0]) * 1000)
+            actions[6] = 1
+        else:
+            if self.g_nb_fruit_on_pos() > 0:
+                actions[7] = 1
+            else:
+                moves_value = np.array(
+                    [
+                        self.g_nb_fruit_on_dir([0, -1])
+                        - (self.g_bot_on_dir([0, -1]) * 1000),
+                        self.g_nb_fruit_on_dir([0, 1])
+                        - (self.g_bot_on_dir([0, 1]) * 1000),
+                        self.g_nb_fruit_on_dir([-1, 0])
+                        - (self.g_bot_on_dir([-1, 0]) * 1000),
+                        self.g_nb_fruit_on_dir([1, 0])
+                        - (self.g_bot_on_dir([1, 0]) * 1000),
+                    ]
+                )
+                actions[np.argmax(moves_value) + 1] = 1
 
         return actions
 

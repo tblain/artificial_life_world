@@ -54,6 +54,48 @@ class NN:
 
         return total_cost
 
+    def fit_on_one(self, x, y, learning_rate):
+        batch_gradient = []
+        for k in range(0, len(self.weights), 2):
+            batch_gradient.append(np.zeros(self.weights[k].shape))
+            batch_gradient.append(np.zeros(self.weights[k + 1].shape))
+
+        res_l = [x]  # store the result after each layer
+        res = x
+
+        # calculate the result for the current features
+        # print("pre_a")
+        for h in range(0, len(self.weights), 2):
+            pre_a = res @ self.weights[h] + self.weights[h + 1]
+            # print(pre_a)
+            res_l.append(pre_a)  # and store the intermediate result before activation
+            res = self.activ(pre_a)
+        # print()
+        # print()
+
+        loss = self.loss(y, res)
+
+        # update of the last neurone
+        act_deriv = 1  # self.activation_deriv(post_a)
+        batch_gradient[-2] += self.activ(np.expand_dims(res_l[-2], 1)) * loss
+        batch_gradient[-1] += loss * act_deriv
+        # print("loss:")
+        for b in reversed(range(0, len(self.weights) - 2, 2)):  # backpropagation
+            l_output = res_l[(b // 2) + 1]  # layer output
+            loss = self.activ(l_output) * np.dot(loss, self.weights[b + 2].T)
+            # print(loss)
+            batch_gradient[b] = l_output * loss
+            batch_gradient[b + 1] = l_output
+        # print()
+        # print()
+        # print("batch_gradient")
+        for k in range(0, len(self.weights), 2):
+            # print(batch_gradient[k])
+            self.weights[k] -= learning_rate * batch_gradient[k]
+            self.weights[k + 1] -= learning_rate * batch_gradient[k + 1]
+        # print()
+        # print()
+
     def fit(self, x, y, step, epochs, batch_size, learning_rate, validation_datas):
         x_val = validation_datas[0]
         y_val = validation_datas[1]
@@ -116,7 +158,7 @@ class NN:
                     learning_rate * (1 / batch_size) * batch_gradient[k + 1]
                 )
 
-            if x.shape[0] < batch_size * (i + 1):
+            if x.shape[0] < batch_size * nb_bots(i + 1):
                 p = np.random.permutation(len(x))
                 x = x.iloc[p]
                 y = y.iloc[p]
