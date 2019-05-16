@@ -1,6 +1,7 @@
 from neural_network import NN
 import numpy as np
 import genetic
+import random
 
 
 class Bot:
@@ -8,38 +9,35 @@ class Bot:
         if model:
             self.model = model
         else:
-            self.model = NN(11, [20, 20, 8])
+            self.model = NN(198, [200, 150, 100, 50, 8])
 
         self.map = map
         self.x = x
         self.y = y
-        self.incr_energy(10)
+        self.incr_energy(30)
+        self.s_health(3)
         self.nb_steps = 0
         self.sim = sim
         self.type = "B"
+        self.alive = True
 
         self.train = train
         if train:
+            self.incr_energy(100)
             self.type = "T"
 
     def step(self):
         if self.g_energy() <= 0:
+            self.alive = False
             return False
         else:
-            # print(self.nb_steps, " | ", end="")
-            # print(self.g_energy(), " | ", end="")
 
             predict = self.predict()
             action = np.argmax(predict)
 
             if self.train:
-                # print(self.model.weights)
                 albot_actions = self.albot_predict()
-                # print("albot: ", albot_actions)
-                # print("bot  : ", predict)
-                # print("diff : ", predict - albot_actions)
-                # print("weights: ", self.model.weights[0])
-                self.model.fit_on_one(self.g_inputs(), albot_actions, 0.000001)
+                self.model.fit_on_one(self.g_inputs(), albot_actions, 0.001)
 
             if action == 0:  # the bot doesn't move
                 self.incr_energy(-1)  # but still lose energy
@@ -90,34 +88,7 @@ class Bot:
 
             elif action == 6:  # duplication / cell mytose
                 if self.g_energy() > 15:
-                    # self.incr_energy(-2)  # loose of energy to make the child
-                    # energy that will be transfered to the child
-                    energy_to_child = self.g_energy() // 2
-                    self.incr_energy(-energy_to_child)
-                    new_model = genetic.mutate(self.model.weights, 1, 1)
-
-                    # TODO: faire une fonction pour rendre ca plus propre
-                    if self.map.board[self.x + 1, self.y, 0] == 0:
-                        # TODO: faire une methode pour get un truc dans la map
-                        new_bot = Bot(self.map, self.x + 1, self.y, self.sim, new_model)
-                        new_bot.s_energy(energy_to_child)
-                        self.sim.add_bots([new_bot])
-                    elif self.map.board[self.x - 1, self.y, 0] == 0:
-                        new_bot = Bot(self.map, self.x - 1, self.y, self.sim, new_model)
-                        new_bot.s_energy(energy_to_child)
-                        self.sim.add_bots([new_bot])
-                    elif self.map.board[self.x, self.y + 1, 0] == 0:
-                        new_bot = Bot(self.map, self.x, self.y + 1, self.sim, new_model)
-                        new_bot.s_energy(energy_to_child)
-                        self.sim.add_bots([new_bot])
-                    elif self.map.board[self.x, self.y - 1, 0] == 0:
-                        new_bot = Bot(self.map, self.x, self.y - 1, self.sim, new_model)
-                        new_bot.s_energy(energy_to_child)
-                        self.sim.add_bots([new_bot])
-                    else:
-                        # no place to put the child
-                        self.incr_energy(energy_to_child + 2)
-                        self.incr_energy(-1)
+                    self.mitose()
                 else:
                     self.incr_energy(-1)
 
@@ -129,6 +100,71 @@ class Bot:
             self.nb_steps += 1
             return True
 
+    def g_health(self):
+        return self.map.board[self.x, self.y, 4]
+
+    def s_health(self, nb):
+        self.map.board[self.x, self.y, 4] = nb
+
+    def incr_health(self, nb):
+        self.map.board[self.x, self.y, 4] += nb
+
+    def mitose(self):
+        self.incr_energy(-5)  # loose of energy to make the child
+        # energy that will be transfered to the child
+        energy_to_child = 5
+        new_model = genetic.mutate(self.model.weights, 1, 1)
+
+        # TODO: faire une fonction pour rendre ca plus propre
+        if self.map.board[self.x + 1, self.y, 0] == 0:
+            # TODO: faire une methode pour get un truc dans la map
+            new_bot = Bot(self.map, self.x + 1, self.y, self.sim, new_model)
+            new_bot.s_energy(energy_to_child)
+            self.sim.add_bots([new_bot])
+        elif self.map.board[self.x - 1, self.y, 0] == 0:
+            new_bot = Bot(self.map, self.x - 1, self.y, self.sim, new_model)
+            new_bot.s_energy(energy_to_child)
+            self.sim.add_bots([new_bot])
+        elif self.map.board[self.x, self.y + 1, 0] == 0:
+            new_bot = Bot(self.map, self.x, self.y + 1, self.sim, new_model)
+            new_bot.s_energy(energy_to_child)
+            self.sim.add_bots([new_bot])
+        elif self.map.board[self.x, self.y - 1, 0] == 0:
+            new_bot = Bot(self.map, self.x, self.y - 1, self.sim, new_model)
+            new_bot.s_energy(energy_to_child)
+            self.sim.add_bots([new_bot])
+        else:
+            # no place to put the child
+            self.incr_energy(energy_to_child)
+            self.incr_energy(-1)
+
+    def dispose_meat_floor(self):
+        """ Put its energy in the form of meat on the floor """
+        x = self.x
+        y = self.y
+
+        while self.g_energy() > 0:
+            meat = random.randint(1, self.g_energy())
+            self.incr_energy(-meat)
+
+            if meat % 4 == 0 and self.pos_valid(x + 1, y):
+                c_x = x + 1
+                c_y = y
+
+            elif meat % 4 == 1 and self.pos_valid(x - 1, y):
+                c_x = x - 1
+                c_y = y
+
+            elif meat % 4 == 2 and self.pos_valid(x, y + 1):
+                c_x = x
+                c_y = y + 1
+
+            elif meat % 4 == 3 and self.pos_valid(x, y - 1):
+                c_x = x
+                c_y = y - 1
+
+            self.map.board[c_x, c_y, 9] = meat
+
     def eat(self):
         self.incr_energy(-1)  # energy lost by the consume of food
         if self.g_nb_fruit_on_pos() > 0:
@@ -139,14 +175,15 @@ class Bot:
             if self.map.board[self.x, self.y, 11] == 0:
                 self.map.board[self.x, self.y, 10] = 0
 
+    def clear_bot_infos(self):
+        self.map.board[self.x, self.y, :10] = 0
+
     def move(self, action):
-        self.map.board[self.x + action[0], self.y + action[1], :3] = self.map.board[
-            self.x, self.y, :3
+        self.map.board[self.x + action[0], self.y + action[1], :4] = self.map.board[
+            self.x, self.y, :4  # change that when the amount of bot infos increase
         ]
 
-        self.map.board[self.x, self.y, 0] = 0
-        self.map.board[self.x, self.y, 1] = 0
-        self.map.board[self.x, self.y, 2] = 0
+        self.clear_bot_infos()
 
         self.x += action[0]
         self.y += action[1]
@@ -183,43 +220,144 @@ class Bot:
             else:
                 return 0
 
-    def g_nb_fruit_on_dir(self, dir):
-        x_p_dir = self.x + dir[0]
-        y_p_dir = self.y + dir[1]
-        return (
-            self.g_nb_fruit_on_pos(x_p_dir + 1, y_p_dir)
-            + self.g_nb_fruit_on_pos(x_p_dir - 1, y_p_dir)
-            + self.g_nb_fruit_on_pos(x_p_dir, y_p_dir + 1)
-            + self.g_nb_fruit_on_pos(x_p_dir, y_p_dir - 1)
-            + self.g_nb_fruit_on_pos(x_p_dir, y_p_dir)
-            # substraction of the energy on the bot pos
-            - self.g_nb_fruit_on_pos()
-        )
+    def g_nb_fruit_on_dir(self, dir, dist=0):
+        # print("Dir: ", dir)
+        # print()
+        nb_fruits = 0
+        c_x = self.x
+        c_y = self.y
+        for i in reversed(range(dist)):
+            c_x += dir[0]
+            c_y += dir[1]
+            nb_fruits += self.g_nb_fruit_on_pos(c_x, c_y)
+            # print("Direct= x: ", c_x, "/ y: ", c_y)
 
-    def g_bot_on_dir(self, dir):
-        x_p_dir = self.x + dir[0]
-        y_p_dir = self.y + dir[1]
-        if 0 <= x_p_dir < self.map.width and 0 <= y_p_dir < self.map.height:
-            return self.map.board[x_p_dir, y_p_dir, 0]
-        else:
+            for k in range(1, i):
+                nb_fruits += self.g_nb_fruit_on_pos(c_x + k * dir[1], c_y + k * dir[0])
+                nb_fruits += self.g_nb_fruit_on_pos(c_x - k * dir[1], c_y - k * dir[0])
+                # print("Cote= x: ", c_x + k * dir[1], "/ y: ", c_y + k * dir[0])
+                # print("Cote= x: ", c_x - k * dir[1], "/ y: ", c_y - k * dir[0])
+
+        return nb_fruits
+
+        # x_p_dir = self.x + dir[0]
+        # y_p_dir = self.y + dir[1]
+        # return (
+        #    self.g_nb_fruit_on_pos(x_p_dir + 1, y_p_dir)
+        #    + self.g_nb_fruit_on_pos(x_p_dir - 1, y_p_dir)
+        #    + self.g_nb_fruit_on_pos(x_p_dir, y_p_dir + 1)
+        #    + self.g_nb_fruit_on_pos(x_p_dir, y_p_dir - 1)
+        #    + self.g_nb_fruit_on_pos(x_p_dir, y_p_dir)
+        #    # substraction of the energy on the bot pos
+        #    - self.g_nb_fruit_on_pos()
+        # )
+
+    def g_bot_on_dir(self, dir, dist=0):
+        nb_bot = 0
+        c_x = self.x
+        c_y = self.y
+        for i in reversed(range(dist)):
+            c_x += dir[0]
+            c_y += dir[1]
+            nb_bot += self.g_nb_bot_on_pos(c_x, c_y)
+
+            for k in range(1, i):
+                nb_bot += self.g_nb_bot_on_pos(c_x + k * dir[1], c_y + k * dir[0])
+                nb_bot += self.g_nb_bot_on_pos(c_x - k * dir[1], c_y - k * dir[0])
+
+        return nb_bot
+
+    def g_nb_bot_on_pos(self, x=-1, y=-1):
+        if x == -1:
+            x = self.x
+            y = self.y
+
+        if 0 <= x < self.map.width and 0 <= y < self.map.height:
+            return self.map.board[x, y, 0]
         else:
             return 0
 
+    def g_nb_kill_on_pos(self, x=-1, y=-1):
+        if x == -1:
+            x = self.x
+            y = self.y
+
+        if self.pos_valid(x, y):
+            return self.map.board[x, y, 3]
+        else:
+            return 0
+
+    def pos_valid(self, x, y):
+        return 0 <= x < self.map.width and 0 <= y < self.map.height
+
+    def g_infos_on_pos(self, x=-1, y=-1):
+        if x == -1:
+            x = self.x
+            y = self.y
+
+        if self.pos_valid(x, y):
+            return self.map.board[x, y, :12]
+        else:
+            return 0
+
+    def g_infos_on_dir(self, dir, x=-1, y=-1, dist=0):
+        infos = np.zeros((12))
+        c_x = self.x
+        c_y = self.y
+        for i in reversed(range(dist)):
+            c_x += dir[0]
+            c_y += dir[1]
+            infos += self.g_infos_on_pos(c_x, c_y)
+
+            for k in range(1, i):
+                infos += self.g_infos_on_pos(c_x + k * dir[1], c_y + k * dir[0])
+                infos += self.g_infos_on_pos(c_x - k * dir[1], c_y - k * dir[0])
+
+        return infos
+
     def g_inputs(self):
         inputs = np.array([])
-        # self.map.display(self.map.get_around(self.x, self.y, 5))
         inputs = np.append(inputs, self.g_energy())
         inputs = np.append(inputs, self.g_nb_fruit_on_pos())
+        inputs = np.append(inputs, self.sim.current_nb_step % 2)
+        inputs = np.append(inputs, self.sim.current_nb_step % 10)
+        inputs = np.append(inputs, self.sim.current_nb_step % 50)
 
-        inputs = np.append(inputs, self.g_nb_fruit_on_dir([0, 1]))
-        inputs = np.append(inputs, self.g_nb_fruit_on_dir([0, -1]))
-        inputs = np.append(inputs, self.g_nb_fruit_on_dir([1, 0]))
-        inputs = np.append(inputs, self.g_nb_fruit_on_dir([-1, 0]))
+        inputs = np.append(inputs, self.g_infos_on_dir([0, 1], 3))
+        inputs = np.append(inputs, self.g_infos_on_dir([0, -1], 3))
+        inputs = np.append(inputs, self.g_infos_on_dir([1, 0], 3))
+        inputs = np.append(inputs, self.g_infos_on_dir([-1, 0], 3))
 
-        inputs = np.append(inputs, self.g_bot_on_dir([1, 0]))
-        inputs = np.append(inputs, self.g_bot_on_dir([-1, 0]))
-        inputs = np.append(inputs, self.g_bot_on_dir([0, 1]))
-        inputs = np.append(inputs, self.g_bot_on_dir([0, -1]))
+        inputs = np.append(inputs, self.g_infos_on_dir([0, 1], 2))
+        inputs = np.append(inputs, self.g_infos_on_dir([0, -1], 2))
+        inputs = np.append(inputs, self.g_infos_on_dir([1, 0], 2))
+        inputs = np.append(inputs, self.g_infos_on_dir([-1, 0], 2))
+
+        inputs = np.append(inputs, self.g_infos_on_dir([0, 1], 1))
+        inputs = np.append(inputs, self.g_infos_on_dir([0, -1], 1))
+        inputs = np.append(inputs, self.g_infos_on_dir([1, 0], 1))
+        inputs = np.append(inputs, self.g_infos_on_dir([-1, 0], 1))
+
+        inputs = np.append(inputs, self.g_infos_on_dir([0, 1], 0))
+        inputs = np.append(inputs, self.g_infos_on_dir([0, -1], 0))
+        inputs = np.append(inputs, self.g_infos_on_dir([1, 0], 0))
+        inputs = np.append(inputs, self.g_infos_on_dir([-1, 0], 0))
+
+        # inputs = np.append(inputs, self.g_nb_fruit_on_dir([0, 1], 3))
+        # inputs = np.append(inputs, self.g_nb_fruit_on_dir([0, -1], 3))
+        # inputs = np.append(inputs, self.g_nb_fruit_on_dir([1, 0], 3))
+        # inputs = np.append(inputs, self.g_nb_fruit_on_dir([-1, 0], 3))
+
+        # inputs = np.append(inputs, self.g_bot_on_dir([1, 0]))
+        # inputs = np.append(inputs, self.g_bot_on_dir([-1, 0]))
+        # inputs = np.append(inputs, self.g_bot_on_dir([0, 1]))
+        # inputs = np.append(inputs, self.g_bot_on_dir([0, -1]))
+
+        # inputs = np.append(inputs, self.g_bot_on_dir([1, 0], 3))
+        # inputs = np.append(inputs, self.g_bot_on_dir([-1, 0], 3))
+        # inputs = np.append(inputs, self.g_bot_on_dir([0, 1]), 3)
+        # inputs = np.append(inputs, self.g_bot_on_dir([0, -1], 3))
+
         inputs = np.append(inputs, max(self.g_energy() - 15, 0))
 
         return inputs
@@ -232,18 +370,23 @@ class Bot:
         actions = [0, 0, 0, 0, 0, 0, 0, 0]
 
         if self.g_energy() > 300:
-            actions[6] = 1000
+            pass
+            # actions[6] = 1000
         if self.g_nb_fruit_on_pos() > 0:
-            actions[7] = 100
+            actions[7] = 10000
 
-        actions[1] = self.g_nb_fruit_on_dir([0, -1]) - (
-            self.g_bot_on_dir([0, -1]) * 1000
+        actions[1] = self.g_nb_fruit_on_dir([0, -1], 3) - (
+            self.g_bot_on_dir([0, -1]) * 0000
         )
-        actions[2] = self.g_nb_fruit_on_dir([0, 1]) - (self.g_bot_on_dir([0, 1]) * 1000)
-        actions[3] = self.g_nb_fruit_on_dir([-1, 0]) - (
-            self.g_bot_on_dir([-1, 0]) * 1000
+        actions[2] = self.g_nb_fruit_on_dir([0, 1], 3) - (
+            self.g_bot_on_dir([0, 1]) * 0000
         )
-        actions[4] = self.g_nb_fruit_on_dir([1, 0]) - (self.g_bot_on_dir([1, 0]) * 1000)
+        actions[3] = self.g_nb_fruit_on_dir([-1, 0], 3) - (
+            self.g_bot_on_dir([-1, 0]) * 0000
+        )
+        actions[4] = self.g_nb_fruit_on_dir([1, 0], 3) - (
+            self.g_bot_on_dir([1, 0]) * 0000
+        )
 
         return actions
 

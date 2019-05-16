@@ -127,6 +127,7 @@ class Al_bot:
         self.map.board[self.x, self.y, 0] = 0
         self.map.board[self.x, self.y, 1] = 0
         self.map.board[self.x, self.y, 2] = 0
+        self.map.board[self.x, self.y, 3] = 0
 
         self.x += dir[0]
         self.y += dir[1]
@@ -163,18 +164,25 @@ class Al_bot:
             else:
                 return 0
 
-    def g_nb_fruit_on_dir(self, dir):
-        x_p_dir = self.x + dir[0]
-        y_p_dir = self.y + dir[1]
-        return (
-            self.g_nb_fruit_on_pos(x_p_dir + 1, y_p_dir)
-            + self.g_nb_fruit_on_pos(x_p_dir - 1, y_p_dir)
-            + self.g_nb_fruit_on_pos(x_p_dir, y_p_dir + 1)
-            + self.g_nb_fruit_on_pos(x_p_dir, y_p_dir - 1)
-            + self.g_nb_fruit_on_pos(x_p_dir, y_p_dir)
-            # substraction of the energy on the bot pos
-            - self.g_nb_fruit_on_pos()
-        )
+    def g_nb_fruit_on_dir(self, dir, dist=0):
+        # print("Dir: ", dir)
+        # print()
+        nb_fruits = 0
+        c_x = self.x
+        c_y = self.y
+        for i in reversed(range(dist)):
+            c_x += dir[0]
+            c_y += dir[1]
+            nb_fruits += self.g_nb_fruit_on_pos(c_x, c_y)
+            # print("Direct= x: ", c_x, "/ y: ", c_y)
+
+            for k in range(1, i):
+                nb_fruits += self.g_nb_fruit_on_pos(c_x + k * dir[1], c_y + k * dir[0])
+                nb_fruits += self.g_nb_fruit_on_pos(c_x - k * dir[1], c_y - k * dir[0])
+                # print("Cote= x: ", c_x + k * dir[1], "/ y: ", c_y + k * dir[0])
+                # print("Cote= x: ", c_x - k * dir[1], "/ y: ", c_y - k * dir[0])
+
+        return nb_fruits
 
     def g_bot_on_dir(self, dir):
         x_p_dir = self.x + dir[0]
@@ -195,13 +203,13 @@ class Al_bot:
             else:
                 moves_value = np.array(
                     [
-                        self.g_nb_fruit_on_dir([0, -1])
+                        self.g_nb_fruit_on_dir([0, -1], 3)
                         - (self.g_bot_on_dir([0, -1]) * 1000),
-                        self.g_nb_fruit_on_dir([0, 1])
+                        self.g_nb_fruit_on_dir([0, 1], 3)
                         - (self.g_bot_on_dir([0, 1]) * 1000),
-                        self.g_nb_fruit_on_dir([-1, 0])
+                        self.g_nb_fruit_on_dir([-1, 0], 3)
                         - (self.g_bot_on_dir([-1, 0]) * 1000),
-                        self.g_nb_fruit_on_dir([1, 0])
+                        self.g_nb_fruit_on_dir([1, 0], 3)
                         - (self.g_bot_on_dir([1, 0]) * 1000),
                     ]
                 )
