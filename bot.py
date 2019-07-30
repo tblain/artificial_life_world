@@ -14,16 +14,30 @@ class Bot:
         self.map = map
         self.x = x
         self.y = y
+
+        # donne de l'energie au bot
         self.incr_energy(30)
+
+        # donne de la vie au bot
         self.s_health(3)
+
+        # commence le decompte du nb de step du bot
         self.nb_steps = 0
+
+        # donne la simulation au bot
         self.sim = sim
-        self.type = "B"
+
+        # attribue le type au bot
+        self.type = "B"  # => bot normal
+
         self.alive = True
 
         self.train = train
-        if train:
+
+        if train:  # si le bot est en mode training
+            # lui donne de l'energie en plus pour avoir un peux plus de temps pour train
             self.incr_energy(100)
+            # lui donne le type training
             self.type = "T"
 
     def step(self):
