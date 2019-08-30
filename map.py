@@ -55,6 +55,11 @@ class Map:
         )
         self.btn_spawn_tree.grid(row=3, column=0)
 
+        self.btn_spawn_herbi = Button(
+            self.master, text="Spawn herbivores", command=self.spawn_spawn_herbivores
+        )
+        self.btn_spawn_herbi.grid(row=3, column=0)
+
         # Radiobutton
         # self.radiobutton_train_on = Radiobutton(
         #    self.TK(), text="Train  on", variable=self.v, value=True
@@ -87,14 +92,17 @@ class Map:
     def load_bots(self):
         self.sim.load_bots(self.scale_nb.get(), train=(self.v_train_bots == 1))
 
+    def load_herbivores(self):
+        self.sim.load_herbivores(self.scale_nb.get())
+
     def toggle_display(self):
         self.sim.display = not self.sim.display
 
     def clean_board_draw(self):
-        board_draw = np.empty([50, 50], dtype=object)
+        board_draw = np.empty([40, 40], dtype=object)
 
-        for i in range(50):
-            for j in range(50):
+        for i in range(40):
+            for j in range(40):
                 frame = Frame(self.master, width=20, height=20, background="white")
                 frame.grid(row=j + 10, column=i + 10)
                 board_draw[i, j] = frame
