@@ -5,11 +5,7 @@ import random
 
 
 class Bot:
-    def __init__(self, map, x, y, sim, model=None, train=False):
-        if model:
-            self.model = model
-        else:
-            self.model = NN(198, [200, 150, 100, 50, 8])
+    def __init__(self, map, x, y, sim):
 
         self.map = map
         self.x = x
@@ -27,18 +23,7 @@ class Bot:
         # donne la simulation au bot
         self.sim = sim
 
-        # attribue le type au bot
-        self.type = "B"  # => bot normal
-
         self.alive = True
-
-        self.train = train
-
-        if train:  # si le bot est en mode training
-            # lui donne de l'energie en plus pour avoir un peux plus de temps pour train
-            self.incr_energy(100)
-            # lui donne le type training
-            self.type = "T"
 
     def step(self):
         if self.g_energy() <= 0:
@@ -46,8 +31,7 @@ class Bot:
             return False
         else:
 
-            predict = self.predict()
-            action = np.argmax(predict)
+            action = self.predict()
 
             if self.train:
                 albot_actions = self.albot_predict()
@@ -375,34 +359,6 @@ class Bot:
         inputs = np.append(inputs, max(self.g_energy() - 15, 0))
 
         return inputs
-
-    def predict(self):
-        inputs = self.g_inputs()
-        return self.model.predict(inputs)
-
-    def albot_predict(self):
-        actions = [0, 0, 0, 0, 0, 0, 0, 0]
-
-        if self.g_energy() > 300:
-            pass
-            # actions[6] = 1000
-        if self.g_nb_fruit_on_pos() > 0:
-            actions[7] = 10000
-
-        actions[1] = self.g_nb_fruit_on_dir([0, -1], 3) - (
-            self.g_bot_on_dir([0, -1]) * 0000
-        )
-        actions[2] = self.g_nb_fruit_on_dir([0, 1], 3) - (
-            self.g_bot_on_dir([0, 1]) * 0000
-        )
-        actions[3] = self.g_nb_fruit_on_dir([-1, 0], 3) - (
-            self.g_bot_on_dir([-1, 0]) * 0000
-        )
-        actions[4] = self.g_nb_fruit_on_dir([1, 0], 3) - (
-            self.g_bot_on_dir([1, 0]) * 0000
-        )
-
-        return actions
 
     def reset(self):
         pass
