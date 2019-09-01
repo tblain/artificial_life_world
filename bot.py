@@ -3,6 +3,8 @@ import numpy as np
 import genetic
 import random
 
+# from herbivore import Herbivore
+# from nn_bot import NN_bot
 
 class Bot:
     def __init__(self, map, x, y, sim):
@@ -85,7 +87,7 @@ class Bot:
                     pass
 
             elif action == 6:  # duplication / cell mytose
-                if self.g_energy() > 15:
+                if self.g_energy() > 15 and len(self.sim.bots) < 5000:
                     self.mitose()
                 else:
                     self.incr_energy(-1)
@@ -106,36 +108,7 @@ class Bot:
 
     def incr_health(self, nb):
         self.map.board[self.x, self.y, 4] += nb
-
-    def mitose(self):
-        self.incr_energy(-5)  # loose of energy to make the child
-        # energy that will be transfered to the child
-        energy_to_child = 5
-        new_model = genetic.mutate(self.model.weights, 1, 1)
-
-        # TODO: faire une fonction pour rendre ca plus propre
-        if self.map.board[self.x + 1, self.y, 0] == 0:
-            # TODO: faire une methode pour get un truc dans la map
-            new_bot = Bot(self.map, self.x + 1, self.y, self.sim, new_model)
-            new_bot.s_energy(energy_to_child)
-            self.sim.add_bots([new_bot])
-        elif self.map.board[self.x - 1, self.y, 0] == 0:
-            new_bot = Bot(self.map, self.x - 1, self.y, self.sim, new_model)
-            new_bot.s_energy(energy_to_child)
-            self.sim.add_bots([new_bot])
-        elif self.map.board[self.x, self.y + 1, 0] == 0:
-            new_bot = Bot(self.map, self.x, self.y + 1, self.sim, new_model)
-            new_bot.s_energy(energy_to_child)
-            self.sim.add_bots([new_bot])
-        elif self.map.board[self.x, self.y - 1, 0] == 0:
-            new_bot = Bot(self.map, self.x, self.y - 1, self.sim, new_model)
-            new_bot.s_energy(energy_to_child)
-            self.sim.add_bots([new_bot])
-        else:
-            # no place to put the child
-            self.incr_energy(energy_to_child)
-            self.incr_energy(-1)
-
+    
     def dispose_meat_floor(self):
         """ Put its energy in the form of meat on the floor """
         x = self.x
@@ -160,6 +133,9 @@ class Bot:
             elif meat % 4 == 3 and self.pos_valid(x, y - 1):
                 c_x = x
                 c_y = y - 1
+            else:
+                c_x = x
+                c_y = y
 
             self.map.board[c_x, c_y, 9] = meat
 
@@ -191,6 +167,7 @@ class Bot:
         """ return bot's energy """
         return self.map.board[self.x, self.y, 1]
 
+
     def incr_energy(self, nb):
         """ increase the bot's energy by nb / can be negativ """
         self.map.board[self.x, self.y, 1] += nb
@@ -208,6 +185,17 @@ class Bot:
     def g_reproduction(self):
         """ return the reproduction value of the bot """
         return self.map.board[self.x, self.y, 2]
+
+    def g_cd_repro(self):
+        """ return bot's cd repro / time before he can reproduce again """
+        return self.map.board[self.x, self.y, 5]
+
+    def incr_cd_repro(self, nb):
+        """ increase the bot's cd repro by nb / can be negativ """
+        self.map.board[self.x, self.y, 5] += nb
+
+    def s_energy(self, nb):  # TODO comment
+        self.map.board[self.x, self.y, 1] - nb
 
     def g_nb_fruit_on_pos(self, x=-1, y=-1):
         if x == -1:
@@ -276,12 +264,24 @@ class Bot:
             return 0
 
     def g_nb_kill_on_pos(self, x=-1, y=-1):
+        # return le nb de kill du bot sur une case
         if x == -1:
             x = self.x
             y = self.y
 
         if self.pos_valid(x, y):
             return self.map.board[x, y, 3]
+        else:
+            return 0
+
+    def g_cd_repro_on_pos(self, x=-1, y=-1):
+        # return le cd de reproduction du bot sur une case
+        if x == -1:
+            x = self.x
+            y = self.y
+
+        if self.pos_valid(x, y):
+            return self.map.board[x, y, 5]
         else:
             return 0
 

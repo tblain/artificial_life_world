@@ -56,7 +56,7 @@ class Map:
         self.btn_spawn_tree.grid(row=3, column=0)
 
         self.btn_spawn_herbi = Button(
-            self.master, text="Spawn herbivores", command=self.spawn_spawn_herbivores
+            self.master, text="Spawn herbivores", command=self.load_herbivores
         )
         self.btn_spawn_herbi.grid(row=3, column=0)
 
@@ -169,11 +169,11 @@ class Map:
 
     def spawn_outer_walls(self):
         for i in range(self.width):
-            self.board[i, 0] = 2
+            self.board[i, 0] = 3
             self.board[i, self.height - 1] = 3
 
         for i in range(self.height):
-            self.board[0, i] = 2
+            self.board[0, i] = 3
             self.board[self.width - 1, i] = 3
 
     def display(self, x1=0, y1=0, nb_cell_to_display=50, board=np.array([]), style=0):
@@ -224,12 +224,16 @@ class Map:
                     if disp_board[x, y, 0] == 1:
                         self.board_draw[x - x1, y - y1].configure(background="blue")
 
+                    elif disp_board[x, y, 0] == 2:
+                        self.board_draw[x - x1, y - y1].configure(background="purple")
+
                     elif disp_board[x, y, 10] == 1:
                         nb_fruits = disp_board[x, y, 11]
                         color = (
                             "#300" + "{:03d}".format(int(nb_fruits * 20 + 400)) + "300"
                         )
                         self.board_draw[x - x1, y - y1].configure(background=color)
+
 
                     else:
                         self.board_draw[x - x1, y - y1].configure(background="white")

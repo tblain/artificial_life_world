@@ -2,10 +2,10 @@ from neural_network import NN
 import numpy as np
 import genetic
 import random
-from bot.py import Bot
+from bot import Bot
 
 
-class NN_bot:
+class NN_bot(Bot):
     def __init__(self, map, x, y, sim, model=None, train=False):
         Bot.__init__(self, map, x, y, sim)
 
@@ -113,5 +113,46 @@ class NN_bot:
 
         return actions
 
-    def reset(self):
-        pass
+    def mitose(self):
+        if self.g_cd_repro() == 0:
+
+            self.incr_cd_repro(20)
+            self.incr_energy(-5)  # loose of energy to make the child
+            # energy that will be transfered to the child
+            energy_to_child = 5
+
+            x = -1
+            y = -1
+
+            # TODO: faire une fonction pour rendre ca plus propre
+            if self.y - 1 > 0:
+                if self.map.board[self.x, self.y - 1, 0] == 0:
+                    x = self.x
+                    y = self.y - 1
+
+            elif self.y + 1 < self.map.height - 1:
+                if self.map.board[self.x, self.y + 1, 0] == 0:
+                    x = self.x
+                    y = self.y + 1
+
+            elif self.x - 1 > 0:
+                if self.map.board[self.x - 1, self.y, 0] == 0:
+                    x = self.x - 1
+                    y = self.y
+
+            elif self.x + 1 < self.map.height - 1:
+                if self.map.board[self.x + 1, self.y, 0] == 0:
+                    x = self.x + 1
+                    y = self.y
+            else:
+                # no place to put the child
+                self.incr_energy(energy_to_child)
+                self.incr_energy(-1)
+
+            if x == -1:
+                pass
+            else:
+                new_model = genetic.mutate(self.model.weights, 1, 1)
+                new_bot = NN_bot(self.map, self.x + 1, self.y, self.sim, new_model)
+                new_bot.s_energy(energy_to_child)
+                self.sim.add_bots([new_bot])

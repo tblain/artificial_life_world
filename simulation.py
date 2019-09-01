@@ -3,15 +3,15 @@ import random
 import time
 
 from map import Map
-from bot import Bot
-from al_bot import Al_bot
+from nn_bot import NN_bot
+from herbivore import Herbivore
 from genetic import croisement, mutate
 
 from tqdm import tqdm
 
 
 class Simulation:
-    def __init__(self, nb_bots):
+    def __init__(self, nb_bots, nb_herbi):
         self.map = Map(450, 450, 12, self)
         self.map.spawn_outer_walls()
         self.map.spawn_tree(400000, 30)
@@ -21,8 +21,12 @@ class Simulation:
         self.bots = []
         self.train_bots = []
 
-        self.load_bots(10, reset=False, train=True)
-        self.load_bots(nb_bots, reset=False)
+        self.nn_bots = []
+
+        # self.load_bots(10, train=True)
+        self.load_bots(nb_bots)
+
+        self.load_herbivores(nb_herbi)
 
         self.total_nb_step = 0
         self.total_max_bot_steps = 0
@@ -38,24 +42,24 @@ class Simulation:
         # self.bots.append(Al_bot(self.map, 3, 3, self))
         # self.map.board[3, 3, 0] = 1
 
-    def load_bots(self, nb_bots, reset=False, train=False):
-        pos = np.random.randint(self.map.height, size=(nb_bots, 2))
+    def load_herbivores(self, nb_herbi):
+        for i in tqdm(range(nb_herbi)):
+            x, y = self.g_free_xy()
 
-        if reset:
-            pass
-        else:
-            for i in tqdm(range(nb_bots)):
-                x = pos[i, 0]
-                y = pos[i, 1]
-                while self.map.board[x, y, 0] != 0:
-                    x = random.randint(0, self.map.height - 1)
-                    y = random.randint(0, self.map.height - 1)
+            bot = Herbivore(self.map, x, y, self)
+            self.map.board[x, y, 0] = 2
+            self.bots.append(bot)
 
-                bot = Bot(self.map, x, y, self, train=train)
-                if train:
-                    self.train_bots.append(bot)
-                self.map.board[x, y, 0] = 1
-                self.bots.append(bot)
+    def load_bots(self, nb_bots, train=False):
+        for i in tqdm(range(nb_bots)):
+            x, y = self.g_free_xy()
+
+            bot = NN_bot(self.map, x, y, self, train=train)
+            if train:
+                self.train_bots.append(bot)
+            self.map.board[x, y, 0] = 1
+            self.bots.append(bot)
+            self.nn_bots.append(bot)
 
     def add_bots(self, bots=[]):
         if len(bots) > 0:
@@ -64,12 +68,16 @@ class Simulation:
         else:
             x, y = self.g_free_xy()
             bot = Bot(self.map, x, y, self)
-            self.map.board[x, y, 0] = 1
+            if self.map.board[x, y, 0] == 0:
+                self.map.board[x, y, 0] = 1
             self.next_bots.append(bot)
 
     def step(self):
-        if len(self.bots) > 0:
-            if self.current_nb_step % 10 == 1:
+        if True or len(self.bots) > 0:
+            cd_repro_board = self.map.board[:, :, 5]
+            cd_repro_board[cd_repro_board > 0] -= 1
+
+            if self.current_nb_step % 10 == 1 and len(self.bots) < 5000:
                 self.spawn_child()
 
             for i in range(len(self.bots) - 1, -1, -1):
@@ -88,6 +96,10 @@ class Simulation:
                     self.current_max_bot_steps = max(
                         self.current_max_bot_steps, bot.nb_steps
                     )
+
+                    if bot.type == "B" or bot.type == "T":
+                        self.nn_bots.remove(bot)
+
                     self.bots.remove(bot)
                     bot.nb_steps = 0
 
@@ -95,16 +107,20 @@ class Simulation:
             #    for i in range(1000 - len(self.bots)):
             #        self.add_bots()
 
-            for bot in self.next_bots:
-                self.bots.append(bot)
-                self.map.board[bot.x, bot.y, 0] = 1
-
-            self.next_bots = []
-
             if self.current_nb_step % 2 == 0:
                 self.map.spawn_tree(130, 30)
-            elif self.current_nb_step % 100 == 0:
+            elif self.current_nb_step % 100 == 0 and len(self.bots) < 5000:
                 self.load_bots(1, reset=False, train=True)
+
+            for bot in self.next_bots:
+                self.bots.append(bot)
+                if bot.type == "B" or bot.type == "T":
+                    self.nn_bots.append(bot)
+                    self.map.board[bot.x, bot.y, 0] = 1
+                elif bot.type == "H":
+                    self.map.board[bot.x, bot.y, 0] = 2
+
+            self.next_bots = []
 
         else:
             # TODO: sauvegarder les meilleurs bots pour les mettre dans la gen d'apres et aussi les sauvegarder sur le disque
@@ -125,6 +141,7 @@ class Simulation:
             self.total_nb_step = max(self.total_nb_step, self.current_nb_step)
 
             self.bots = []
+            self.nn_bots = []
 
             for bot in self.train_bots:
                 self.bots.append(bot)
@@ -132,35 +149,39 @@ class Simulation:
                 self.map.board[bot.x, bot.y, 0] = 1
                 bot.incr_energy(10)
 
-            self.load_bots(40000, False)
+            self.load_bots(400, False)
             self.map.spawn_tree(3000, 30)
             self.reset()
 
     def spawn_child(self, nb=1, train=False):
-        for i in range(nb):
-            nb1 = random.randint(0, len(self.bots) - 1)
-            nb2 = random.randint(0, len(self.bots) - 1)
+        if len(self.nn_bots) > 0:
+            for i in range(nb):
+                nb1 = random.randint(0, len(self.nn_bots) - 1)
+                nb2 = random.randint(0, len(self.nn_bots) - 1)
 
-            parent1 = self.bots[nb1]  # parent 1
-            parent2 = self.bots[nb2]  # parent 2
+                parent1 = self.nn_bots[nb1]  # parent 1
+                parent2 = self.nn_bots[nb2]  # parent 2
 
-            # create a child by breeding to random bots
-            child_weights = croisement(parent1.model.weights, parent2.model.weights, 1)[
-                0
-            ]
+                # create a child by breeding to random bots
+                child_weights = croisement(parent1.model.weights, parent2.model.weights, 1)[
+                    0
+                ]
 
-            mutate(child_weights, 1, 1)
+                mutate(child_weights, 1, 1)
 
-            if self.current_nb_step % 2 == 0:
-                x, y = self.g_free_xy(parent1.x, parent1.y, 4)
-            else:
-                x, y = self.g_free_xy(parent2.x, parent2.y, 4)
+                if self.current_nb_step % 2 == 0:
+                    x, y = self.g_free_xy(parent1.x, parent1.y, 4)
+                else:
+                    x, y = self.g_free_xy(parent2.x, parent2.y, 4)
 
-            child = Bot(self.map, x, y, self, train=train)
-            child.model.weights = child_weights
-            self.map.board[x, y, 0] = 1
+                child = NN_bot(self.map, x, y, self, train=train)
+                child.model.weights = child_weights
+                self.map.board[x, y, 0] = 1
+                self.bots.append(child)
+                self.nn_bots.append(child)
 
-            self.bots.append(child)
+        else:
+            self.load_bots(nb, train)
 
     def g_free_xy(self, x=-1, y=-1, dist=-1):
         """
@@ -208,10 +229,10 @@ class Simulation:
             print("Current death: ", self.current_nb_death)
             print("Nb bots: ", len(self.bots))
             print("------")
-            if len(self.bots) > 0:
-                print("Elder: x=", self.bots[0].x, " / y=", self.bots[0].y)
-                x1 = max(self.bots[0].x - 20, 0)
-                y1 = max(self.bots[0].y - 20, 0)
+            if len(self.nn_bots) > 0:
+                print("Elder: x=", self.nn_bots[0].x, " / y=", self.nn_bots[0].y)
+                x1 = max(self.nn_bots[0].x - 20, 0)
+                y1 = max(self.nn_bots[0].y - 20, 0)
             else:
                 x1 = 0
                 y1 = 0
