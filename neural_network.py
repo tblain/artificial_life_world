@@ -24,7 +24,7 @@ class NN:
 
     def activ(self, res):
         # leaky ReLU
-        res[res < 0] = res * 0.01
+        res[res < 0] *= 0.01
         return res
 
     def predict(self, x):
