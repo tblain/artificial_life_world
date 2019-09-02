@@ -12,7 +12,7 @@ class NN_bot(Bot):
         if model:
             self.model = model
         else:
-            self.model = NN(198, [200, 150, 100, 50, 8])
+            self.model = NN(198, [50, 50, 8])
 
         # attribue le type au bot
         self.type = "B"  # => bot normal
@@ -156,3 +156,4 @@ class NN_bot(Bot):
                 new_bot = NN_bot(self.map, self.x + 1, self.y, self.sim, new_model)
                 new_bot.s_energy(energy_to_child)
                 self.sim.add_bots([new_bot])
+
