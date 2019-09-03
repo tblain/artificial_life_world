@@ -19,8 +19,8 @@ class Herbivore(Bot):
             actions[6] = 1000
             pass
 
-        if self.g_nb_fruit_on_pos() > 0:
-            actions[7] = 10000
+        if self.g_nb_fruit_on_pos() >= 3:
+            actions[7] = 10000000000000000000
 
         actions[1] = self.g_nb_fruit_on_dir([0, -1], 4) - (
             self.g_bot_on_dir([0, -1]) * 1000
@@ -59,30 +59,26 @@ class Herbivore(Bot):
                     x = self.x
                     y = self.y - 1
 
-            elif self.y + 1 < self.map.height - 1:
+            if self.y + 1 < self.map.height - 1:
                 if self.map.board[self.x, self.y + 1, 0] == 0:
                     x = self.x
                     y = self.y + 1
 
-            elif self.x - 1 > 0:
+            if self.x - 1 > 0:
                 if self.map.board[self.x - 1, self.y, 0] == 0:
                     x = self.x - 1
                     y = self.y
 
-            elif self.x + 1 < self.map.height - 1:
+            if self.x + 1 < self.map.height - 1:
                 if self.map.board[self.x + 1, self.y, 0] == 0:
                     x = self.x + 1
                     y = self.y
 
-            else:
+            if x == -1:
                 # no place to put the child
                 self.incr_energy(energy_to_child)
                 self.incr_energy(-1)
-
-            if x == -1:
-                pass
             else:
-                new_bot = Herbivore(self.map, self.x + 1, self.y, self.sim)
+                new_bot = Herbivore(self.map, x, y, self.sim)
                 new_bot.s_energy(energy_to_child)
                 self.sim.add_bots([new_bot])
-

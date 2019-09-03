@@ -6,6 +6,7 @@ import random
 # from herbivore import Herbivore
 # from nn_bot import NN_bot
 
+
 class Bot:
     def __init__(self, map, x, y, sim):
 
@@ -108,7 +109,7 @@ class Bot:
 
     def incr_health(self, nb):
         self.map.board[self.x, self.y, 4] += nb
-    
+
     def dispose_meat_floor(self):
         """ Put its energy in the form of meat on the floor """
         x = self.x
@@ -141,7 +142,7 @@ class Bot:
 
     def eat(self):
         self.incr_energy(-1)  # energy lost by the consume of food
-        if self.g_nb_fruit_on_pos() > 0:
+        if self.g_nb_fruit_on_pos() >= 1:
             self.incr_energy(4)  # energy given by eating food
 
             # the tree loose 1 fruit TODO: faire une fonction dans map pour gerer ca
@@ -166,7 +167,6 @@ class Bot:
     def g_energy(self):
         """ return bot's energy """
         return self.map.board[self.x, self.y, 1]
-
 
     def incr_energy(self, nb):
         """ increase the bot's energy by nb / can be negativ """

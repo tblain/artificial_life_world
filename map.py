@@ -1,5 +1,10 @@
 import numpy as np
+import math
 import random
+
+from scipy.signal import convolve2d
+
+
 from tkinter import (
     Tk,
     Canvas,
@@ -32,7 +37,7 @@ class Map:
         self.v.set(1)
 
         self.v_train_bots = IntVar()
-        self.v.set(0)
+        self.v_train_bots.set(0)
 
         # Buttons
         self.btn_spawn_child = Button(
@@ -50,16 +55,15 @@ class Map:
         )
         self.btn_load_bot.grid(row=2, column=0)
 
-        self.btn_spawn_tree = Button(
-            self.master, text="Spawn tree", command=self.spawn_trees
+        self.btn_load_trees = Button(
+            self.master, text="Load trees", command=self.load_trees
         )
-        self.btn_spawn_tree.grid(row=3, column=0)
+        self.btn_load_trees.grid(row=3, column=0)
 
         self.btn_spawn_herbi = Button(
             self.master, text="Spawn herbivores", command=self.load_herbivores
         )
-        self.btn_spawn_herbi.grid(row=3, column=0)
-
+        self.btn_spawn_herbi.grid(row=6, column=0)
         # Radiobutton
         # self.radiobutton_train_on = Radiobutton(
         #    self.TK(), text="Train  on", variable=self.v, value=True
@@ -86,11 +90,14 @@ class Map:
     def spawn_child(self):
         self.sim.spawn_child(self.scale_nb.get(), train=(self.v_train_bots == 1))
 
-    def spawn_trees(self):
-        self.spawn_tree(self.scale_nb.get(), 30)
-
     def load_bots(self):
         self.sim.load_bots(self.scale_nb.get(), train=(self.v_train_bots == 1))
+
+    def load_tree_event(self):
+        nb_trees = self.scale_nb.get()
+        nb_fruits = 1
+
+        self.load_trees(nb_trees, nb_fruits)
 
     def load_herbivores(self):
         self.sim.load_herbivores(self.scale_nb.get())
@@ -148,13 +155,14 @@ class Map:
         # self.display(rboard)
         return rboard
 
-    def spawn_tree(self, nb_bush, nb_fruits):
+    def load_trees(self, nb_trees, nb_fruits):
         """
-        Spawns trees
+        Spawns trees manually
         """
-        pos = np.random.randint(self.height, size=(nb_bush, 2))
-        nb_fruits = np.random.randint(nb_fruits, size=(nb_bush,))
-        for i in range(nb_bush):
+
+        pos = np.random.randint(self.height, size=(nb_trees, 2))
+        nb_fruits = np.random.randint(nb_fruits, size=(nb_trees,))
+        for i in range(nb_trees):
             x = pos[i, 0]
             y = pos[i, 1]
 
@@ -166,6 +174,44 @@ class Map:
                 self.board[x, y, 11] = nb_fruits[i]
             # else:
             #    self.board[x, y, 11] += 1
+
+    def tree_growth(self):
+        """
+        trees grow fruits
+        """
+        max_nb_fruits = 40
+
+        tf = self.board[:, :, 11]  # tree_fruits
+
+        # grow polynomiale
+        # p1 = 1 / 2
+        # p2 = - 1 / 1
+        # growth = p1 * tf * tf + p2 * tf * tf * tf
+
+        # growth sinusoidal
+        growth = np.sin(tf / 18)
+
+        # on limite la growth des trees en fonction de la growth des arbres voisins
+
+        kernel = np.array(
+            [
+                [1, 2, 3, 2, 1],
+                [2, 5, 9, 5, 2],
+                [3, 9, 0, 9, 3],
+                [2, 5, 9, 5, 2],
+                [1, 2, 3, 2, 1],
+            ]
+        )  # TODO a renommer
+        growth -= convolve2d(growth, kernel / 90, "same")
+
+        growth = np.clip(growth, 0, 2)
+
+        # print(growth)
+        self.board[:, :, 11] = np.clip(self.board[:, :, 11] + growth, 0, max_nb_fruits)
+        # print("fruits:", self.board[10, 10, 11])
+
+    def spawn_trees(self):
+        pass
 
     def spawn_outer_walls(self):
         for i in range(self.width):
@@ -228,12 +274,13 @@ class Map:
                         self.board_draw[x - x1, y - y1].configure(background="purple")
 
                     elif disp_board[x, y, 10] == 1:
-                        nb_fruits = disp_board[x, y, 11]
+                        nb_fruits = math.floor(disp_board[x, y, 11]) + random.randint(
+                            -1, 1
+                        )
                         color = (
-                            "#300" + "{:03d}".format(int(nb_fruits * 20 + 400)) + "300"
+                            "#300" + "{:03d}".format(int(nb_fruits * 15 + 300)) + "300"
                         )
                         self.board_draw[x - x1, y - y1].configure(background=color)
-
 
                     else:
                         self.board_draw[x - x1, y - y1].configure(background="white")

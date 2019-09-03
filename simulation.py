@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 
 class Simulation:
-    def __init__(self, nb_bots):
+    def __init__(self, nb_bots, nb_herbi):
         # cree la map qui va faire 100 blocs de large et de long, et avec 12 infos par cases
         self.map = Map(450, 450, 12, self)
 
@@ -19,10 +19,10 @@ class Simulation:
         self.map.spawn_outer_walls()
 
         # charge x vegetaux avec au max 30 fruits chacun
-        self.map.spawn_tree(400, 30)
+        self.map.load_trees(300000, 5)
 
         # la simuation commence sans l'affichage, il peut etre activer par la suite
-        self.display = False
+        self.display = True
 
         # list des bots
         self.bots = []
@@ -63,7 +63,7 @@ class Simulation:
             self.bots.append(bot)
 
     def load_bots(self, nb_bots, train=False):
-        for i in tqdm(range(nb_bots)):
+        for i in range(nb_bots):
             x, y = self.g_free_xy()
 
             bot = NN_bot(self.map, x, y, self, train=train)
@@ -91,6 +91,7 @@ class Simulation:
 
             if self.current_nb_step % 10 == 1 and len(self.bots) < 5000:
                 self.spawn_child()
+                pass
 
             for i in range(len(self.bots) - 1, -1, -1):
                 bot = self.bots[i]
@@ -127,9 +128,15 @@ class Simulation:
             #        self.add_bots()
 
             if self.current_nb_step % 2 == 0:
-                self.map.spawn_tree(130, 30)
-            elif self.current_nb_step % 100 == 0 and len(self.bots) < 5000:
-                self.load_bots(1, reset=False, train=True)
+                # self.map.spawn_tree(130, 10)
+                pass
+            if self.current_nb_step % 10 == 0 and len(self.bots) < 5000:
+                self.load_bots(1, train=False)
+                pass
+            if self.current_nb_step % 5 == 0:
+                self.map.tree_growth()
+
+            self.map.spawn_trees()
 
             for bot in self.next_bots:
                 self.bots.append(bot)
@@ -141,11 +148,6 @@ class Simulation:
 
             self.next_bots = []
 
-            # ajoute des arbres et des bots regulierement
-            if self.current_nb_step % 2 == 0:
-                self.map.spawn_tree(13, 30)
-            elif self.current_nb_step % 100 == 0:
-                self.load_bots(1, reset=False, train=True)
         else:
             # TODO: sauvegarder les meilleurs bots pour les mettre dans la gen d'apres et aussi les sauvegarder sur le disque
             print()
@@ -187,9 +189,9 @@ class Simulation:
                 parent2 = self.nn_bots[nb2]  # parent 2
 
                 # create a child by breeding to random bots
-                child_weights = croisement(parent1.model.weights, parent2.model.weights, 1)[
-                    0
-                ]
+                child_weights = croisement(
+                    parent1.model.weights, parent2.model.weights, 1
+                )[0]
 
                 mutate(child_weights, 1, 1)
 
@@ -241,7 +243,7 @@ class Simulation:
     def play(self):
         print("La Simulation commence")
 
-        for i in range(10000000000000000):
+        for i in range(1000000000000000000000000):
             print("=================")
             print("Total max nb steps: ", self.total_nb_step)
             print("Total elder: ", self.total_max_bot_steps)
