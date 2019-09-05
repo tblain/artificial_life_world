@@ -12,7 +12,7 @@ class NN_bot(Bot):
         if model:
             self.model = model
         else:
-            self.model = NN(198, [50, 50, 8])
+            self.model = NN(197, [50, 50, 8])
 
         # attribue le type au bot
         self.type = "B"  # => bot normal
@@ -26,36 +26,37 @@ class NN_bot(Bot):
             self.type = "T"
 
     def g_inputs(self):
+        # TODO mettre en log les energis
         inputs = np.array([])
-        inputs = np.append(inputs, self.g_energy())
-        inputs = np.append(inputs, self.g_nb_fruit_on_pos())
+        inputs = np.append(inputs, np.cbrt(self.g_energy()))
+        inputs = np.append(inputs, np.cbrt(self.g_nb_fruit_on_pos()))
 
         # des inputs qui servent juste a donner des variables qui bouclent pour
         # permettre au bot un peu de changement dans son comportement et lui
         # permettre d'avoir des actions un peu cyclique
-        inputs = np.append(inputs, self.sim.current_nb_step % 2)
-        inputs = np.append(inputs, self.sim.current_nb_step % 10)
-        inputs = np.append(inputs, self.sim.current_nb_step % 50)
+        inputs = np.append(inputs, np.cbrt(self.sim.current_nb_step % 2))
+        inputs = np.append(inputs, np.cbrt(self.sim.current_nb_step % 10))
+        inputs = np.append(inputs, np.cbrt(self.sim.current_nb_step % 50))
 
-        inputs = np.append(inputs, self.g_infos_on_dir([0, 1], 3))
-        inputs = np.append(inputs, self.g_infos_on_dir([0, -1], 3))
-        inputs = np.append(inputs, self.g_infos_on_dir([1, 0], 3))
-        inputs = np.append(inputs, self.g_infos_on_dir([-1, 0], 3))
+        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([0, 1], 3)))
+        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([0, -1], 3)))
+        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([1, 0], 3)))
+        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([-1, 0], 3)))
 
-        inputs = np.append(inputs, self.g_infos_on_dir([0, 1], 2))
-        inputs = np.append(inputs, self.g_infos_on_dir([0, -1], 2))
-        inputs = np.append(inputs, self.g_infos_on_dir([1, 0], 2))
-        inputs = np.append(inputs, self.g_infos_on_dir([-1, 0], 2))
+        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([0, 1], 2)))
+        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([0, -1], 2)))
+        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([1, 0], 2)))
+        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([-1, 0], 2)))
 
-        inputs = np.append(inputs, self.g_infos_on_dir([0, 1], 1))
-        inputs = np.append(inputs, self.g_infos_on_dir([0, -1], 1))
-        inputs = np.append(inputs, self.g_infos_on_dir([1, 0], 1))
-        inputs = np.append(inputs, self.g_infos_on_dir([-1, 0], 1))
+        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([0, 1], 1)))
+        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([0, -1], 1)))
+        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([1, 0], 1)))
+        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([-1, 0], 1)))
 
-        inputs = np.append(inputs, self.g_infos_on_dir([0, 1], 0))
-        inputs = np.append(inputs, self.g_infos_on_dir([0, -1], 0))
-        inputs = np.append(inputs, self.g_infos_on_dir([1, 0], 0))
-        inputs = np.append(inputs, self.g_infos_on_dir([-1, 0], 0))
+        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([0, 1], 0)))
+        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([0, -1], 0)))
+        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([1, 0], 0)))
+        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([-1, 0], 0)))
 
         # inputs = np.append(inputs, self.g_nb_fruit_on_dir([0, 1], 3))
         # inputs = np.append(inputs, self.g_nb_fruit_on_dir([0, -1], 3))
@@ -71,8 +72,6 @@ class NN_bot(Bot):
         # inputs = np.append(inputs, self.g_bot_on_dir([-1, 0], 3))
         # inputs = np.append(inputs, self.g_bot_on_dir([0, 1]), 3)
         # inputs = np.append(inputs, self.g_bot_on_dir([0, -1], 3))
-
-        inputs = np.append(inputs, max(self.g_energy() - 15, 0))
 
         return inputs
 
@@ -125,22 +124,22 @@ class NN_bot(Bot):
             y = -1
 
             # TODO: faire une fonction pour rendre ca plus propre
-            if self.y - 1 > 0:
+            if self.y - 2 > 0:
                 if self.map.board[self.x, self.y - 1, 0] == 0:
                     x = self.x
                     y = self.y - 1
 
-            elif self.y + 1 < self.map.height - 1:
+            elif self.y + 2 < self.map.height - 1:
                 if self.map.board[self.x, self.y + 1, 0] == 0:
                     x = self.x
                     y = self.y + 1
 
-            elif self.x - 1 > 0:
+            elif self.x - 2 > 0:
                 if self.map.board[self.x - 1, self.y, 0] == 0:
                     x = self.x - 1
                     y = self.y
 
-            elif self.x + 1 < self.map.height - 1:
+            elif self.x + 2 < self.map.height - 1:
                 if self.map.board[self.x + 1, self.y, 0] == 0:
                     x = self.x + 1
                     y = self.y
@@ -156,4 +155,3 @@ class NN_bot(Bot):
                 new_bot = NN_bot(self.map, self.x + 1, self.y, self.sim, new_model)
                 new_bot.s_energy(energy_to_child)
                 self.sim.add_bots([new_bot])
-
