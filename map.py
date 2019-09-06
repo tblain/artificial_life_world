@@ -169,8 +169,7 @@ class Map:
             # while self.board[x, y, 10] != 0:
             # x = random.randint(0, self.height - 1)
             # y = random.randint(0, self.height - 1)
-            if self.board[x, y, 0] == 0 and self.board[x, y, 10] == 0:
-                self.board[x, y, 10] = 1
+            if self.board[x, y, 0] == 0 and self.board[x, y, 11] == 0:
                 self.board[x, y, 11] = nb_fruits[i]
             # else:
             #    self.board[x, y, 11] += 1
@@ -212,6 +211,11 @@ class Map:
 
     def spawn_trees(self):
         pass
+
+    def supp_trees_deracine(self):
+        trees = self.board[:, :, 11]
+        trees[trees < 1] = 0
+        self.board[:, :, 11] = trees
 
     def spawn_outer_walls(self):
         for i in range(self.width):
@@ -273,7 +277,7 @@ class Map:
                     elif disp_board[x, y, 0] == 2:
                         self.board_draw[x - x1, y - y1].configure(background="purple")
 
-                    elif disp_board[x, y, 10] == 1:
+                    elif disp_board[x, y, 11] > 0:
                         nb_fruits = math.floor(disp_board[x, y, 11]) + random.randint(
                             -1, 1
                         )

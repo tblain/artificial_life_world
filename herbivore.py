@@ -19,7 +19,7 @@ class Herbivore(Bot):
             actions[6] = 1000
             pass
 
-        if self.g_nb_fruit_on_pos() >= 3:
+        if self.g_nb_fruit_on_pos() >= 1:
             actions[7] = 10000000000000000000
 
         actions[1] = self.g_nb_fruit_on_dir([0, -1], 4) - (
@@ -54,22 +54,22 @@ class Herbivore(Bot):
 
             # TODO: faire une fonction pour rendre ca plus propre
 
-            if self.y - 1 > 0:
+            if self.y - 2 > 0:
                 if self.map.board[self.x, self.y - 1, 0] == 0:
                     x = self.x
                     y = self.y - 1
 
-            if self.y + 1 < self.map.height - 1:
+            if self.y + 2 < self.map.height - 1:
                 if self.map.board[self.x, self.y + 1, 0] == 0:
                     x = self.x
                     y = self.y + 1
 
-            if self.x - 1 > 0:
+            if self.x - 2 > 0:
                 if self.map.board[self.x - 1, self.y, 0] == 0:
                     x = self.x - 1
                     y = self.y
 
-            if self.x + 1 < self.map.height - 1:
+            if self.x + 2 < self.map.height - 1:
                 if self.map.board[self.x + 1, self.y, 0] == 0:
                     x = self.x + 1
                     y = self.y

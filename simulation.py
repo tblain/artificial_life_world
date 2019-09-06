@@ -123,6 +123,8 @@ class Simulation:
                     # supprime le bot et ses infos
                     bot.clear_bot_infos()
 
+            self.map.supp_trees_deracine()
+
             # if len(self.bots) < 1000:
             #    for i in range(1000 - len(self.bots)):
             #        self.add_bots()
