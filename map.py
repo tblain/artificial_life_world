@@ -56,14 +56,21 @@ class Map:
         self.btn_load_bot.grid(row=2, column=0)
 
         self.btn_load_trees = Button(
-            self.master, text="Load trees", command=self.load_trees
+            self.master, text="Load trees", command=self.load_tree_event
         )
+
         self.btn_load_trees.grid(row=3, column=0)
 
         self.btn_spawn_herbi = Button(
             self.master, text="Spawn herbivores", command=self.load_herbivores
         )
         self.btn_spawn_herbi.grid(row=6, column=0)
+
+        self.btn_set_sim_speed = Button(
+            self.master, text="Set sim speed", command=self.set_sim_speed
+        )
+        self.btn_set_sim_speed.grid(row=7, column=0)
+
         # Radiobutton
         # self.radiobutton_train_on = Radiobutton(
         #    self.TK(), text="Train  on", variable=self.v, value=True
@@ -92,6 +99,9 @@ class Map:
 
     def load_bots(self):
         self.sim.load_bots(self.scale_nb.get(), train=(self.v_train_bots == 1))
+
+    def set_sim_speed(self):
+        self.sim.sim_speed = self.scale_nb.get()
 
     def load_tree_event(self):
         nb_trees = self.scale_nb.get()
@@ -169,7 +179,8 @@ class Map:
             # while self.board[x, y, 10] != 0:
             # x = random.randint(0, self.height - 1)
             # y = random.randint(0, self.height - 1)
-            if self.board[x, y, 0] == 0 and self.board[x, y, 11] == 0:
+            if self.board[x, y, 0] == 0 and self.board[x, y, 10] == 0:
+                self.board[x, y, 10] = 1
                 self.board[x, y, 11] = nb_fruits[i]
             # else:
             #    self.board[x, y, 11] += 1
@@ -212,9 +223,13 @@ class Map:
     def spawn_trees(self):
         pass
 
-    def supp_trees_deracine(self):
+    def supp_trees_deracine(self): # abandonnee
+        print()
         trees = self.board[:, :, 11]
+        b = trees < 1
         trees[trees < 1] = 0
+        print(b.shape)
+        print(self.board[b].reshape(300, 300, 12))
         self.board[:, :, 11] = trees
 
     def spawn_outer_walls(self):

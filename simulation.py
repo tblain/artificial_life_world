@@ -9,17 +9,16 @@ from genetic import croisement, mutate
 
 from tqdm import tqdm
 
-
 class Simulation:
     def __init__(self, nb_bots, nb_herbi):
         # cree la map qui va faire 100 blocs de large et de long, et avec 12 infos par cases
-        self.map = Map(450, 450, 12, self)
+        self.map = Map(300, 300, 12, self)
 
         # cree les murs
-        self.map.spawn_outer_walls()
+        #self.map.spawn_outer_walls()
 
         # charge x vegetaux avec au max 30 fruits chacun
-        self.map.load_trees(300000, 5)
+        self.map.load_trees(18000, 5)
 
         # la simuation commence sans l'affichage, il peut etre activer par la suite
         self.display = True
@@ -53,6 +52,8 @@ class Simulation:
 
         # self.bots.append(Al_bot(self.map, 3, 3, self))
         # self.map.board[3, 3, 0] = 1
+
+        self.sim_speed = 2
 
     def load_herbivores(self, nb_herbi):
         for i in tqdm(range(nb_herbi)):
@@ -89,7 +90,7 @@ class Simulation:
             cd_repro_board = self.map.board[:, :, 5]
             cd_repro_board[cd_repro_board > 0] -= 1
 
-            if self.current_nb_step % 10 == 1 and len(self.bots) < 5000:
+            if self.current_nb_step % 10 == 1 and len(self.bots) < 100:
                 self.spawn_child()
                 pass
 
@@ -123,14 +124,14 @@ class Simulation:
                     # supprime le bot et ses infos
                     bot.clear_bot_infos()
 
-            self.map.supp_trees_deracine()
+            #self.map.supp_trees_deracine()
 
             # if len(self.bots) < 1000:
             #    for i in range(1000 - len(self.bots)):
             #        self.add_bots()
 
             if self.current_nb_step % 2 == 0:
-                # self.map.spawn_tree(130, 10)
+                self.map.load_trees(10, 1)
                 pass
             if self.current_nb_step % 10 == 0 and len(self.bots) < 5000:
                 self.load_bots(1, train=False)
@@ -218,12 +219,12 @@ class Simulation:
         return get a random pos in a certain area around sx and sy
         """
         if x == -1:
-            x = random.randint(0, self.map.height - 1)
-            y = random.randint(0, self.map.height - 1)
+            x = random.randint(1, self.map.height - 2)
+            y = random.randint(1, self.map.height - 2)
 
             while self.map.board[x, y, 0] != 0:
-                x = random.randint(0, self.map.height - 1)
-                y = random.randint(0, self.map.height - 1)
+                x = random.randint(1, self.map.height - 2)
+
 
             return x, y
 
@@ -274,6 +275,7 @@ class Simulation:
             print()
             # time.sleep(0.5)
             self.current_nb_step += 1
+            time.sleep(1/self.sim_speed)
 
     def reset(self):
         self.current_nb_step = 0

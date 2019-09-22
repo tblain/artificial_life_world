@@ -12,7 +12,7 @@ class NN_bot(Bot):
         if model:
             self.model = model
         else:
-            self.model = NN(197, [50, 50, 8])
+            self.model = NN(25, [20, 20, 8])
 
         # attribue le type au bot
         self.type = "B"  # => bot normal
@@ -38,25 +38,30 @@ class NN_bot(Bot):
         inputs = np.append(inputs, np.cbrt(self.sim.current_nb_step % 10))
         inputs = np.append(inputs, np.cbrt(self.sim.current_nb_step % 50))
 
-        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([0, 1], 3)))
-        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([0, -1], 3)))
-        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([1, 0], 3)))
-        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([-1, 0], 3)))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 4, [0, 1])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 4, [0, -1])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 4, [1, 0])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 4, [-1, 0])))
 
-        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([0, 1], 2)))
-        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([0, -1], 2)))
-        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([1, 0], 2)))
-        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([-1, 0], 2)))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 3, [0, 1])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 3, [0, -1])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 3, [1, 0])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 3, [-1, 0])))
 
-        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([0, 1], 1)))
-        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([0, -1], 1)))
-        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([1, 0], 1)))
-        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([-1, 0], 1)))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 2, [0, 1])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 2, [0, -1])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 2, [1, 0])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 2, [-1, 0])))
 
-        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([0, 1], 0)))
-        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([0, -1], 0)))
-        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([1, 0], 0)))
-        inputs = np.append(inputs, np.cbrt(self.g_infos_on_dir([-1, 0], 0)))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 1, [0, 1])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 1, [0, -1])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 1, [1, 0])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 1, [-1, 0])))
+
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 0, [0, 1])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 0, [0, -1])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 0, [1, 0])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 0, [-1, 0])))
 
         # inputs = np.append(inputs, self.g_nb_fruit_on_dir([0, 1], 3))
         # inputs = np.append(inputs, self.g_nb_fruit_on_dir([0, -1], 3))
@@ -152,6 +157,6 @@ class NN_bot(Bot):
                 pass
             else:
                 new_model = genetic.mutate(self.model.weights, 1, 1)
-                new_bot = NN_bot(self.map, self.x + 1, self.y, self.sim, new_model)
+                new_bot = NN_bot(self.map, x, y, self.sim, new_model)
                 new_bot.s_energy(energy_to_child)
                 self.sim.add_bots([new_bot])
