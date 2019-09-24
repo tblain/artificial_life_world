@@ -94,6 +94,9 @@ class Map:
         self.scale_nb.set(25)
         self.scale_nb.grid(row=5, column=0)
 
+    # ====================================================================================
+    # Handlers
+
     def spawn_child(self):
         self.sim.spawn_child(self.scale_nb.get(), train=(self.v_train_bots == 1))
 
@@ -165,6 +168,9 @@ class Map:
         # self.display(rboard)
         return rboard
 
+    # =========================================================================================
+    # gestion du board 
+
     def load_trees(self, nb_trees, nb_fruits):
         """
         Spawns trees manually
@@ -179,9 +185,9 @@ class Map:
             # while self.board[x, y, 10] != 0:
             # x = random.randint(0, self.height - 1)
             # y = random.randint(0, self.height - 1)
-            if self.board[x, y, 0] == 0 and self.board[x, y, 10] == 0:
-                self.board[x, y, 10] = 1
-                self.board[x, y, 11] = nb_fruits[i]
+            if self.board[x, y, 3] == 0:
+                self.board[x, y, 3] = 1
+                self.board[x, y, 21] = nb_fruits[i]
             # else:
             #    self.board[x, y, 11] += 1
 
@@ -191,7 +197,7 @@ class Map:
         """
         max_nb_fruits = 40
 
-        tf = self.board[:, :, 11]  # tree_fruits
+        tf = self.board[:, :, 21]  # tree_fruits
 
         # grow polynomiale
         # p1 = 1 / 2
@@ -217,15 +223,62 @@ class Map:
         growth = np.clip(growth, 0, 2)
 
         # print(growth)
-        self.board[:, :, 11] = np.clip(self.board[:, :, 11] + growth, 0, max_nb_fruits)
+        self.board[:, :, 21] = np.clip(self.board[:, :, 21] + growth, 0, max_nb_fruits)
         # print("fruits:", self.board[10, 10, 11])
 
     def spawn_trees(self):
-        pass
+        """
+        chaque tour les case qui n'ont pas d'arbre genere progressivement
+        une graine cette generation est fonction de la taille des arbres
+        autour (leur nombre de fruits)
+        """
+        # TODO renommer les variables pour leurs donnees plus de sens
+        # TODO optimiser ce bordel
+        tf = self.board[:, :, 21]  # tree_fruits
+
+        kernel = np.array(
+            [
+                [0, 1, 1, 1, 1, 1, 1, 1, 0],
+                [1, 1, 2, 2, 2, 2, 2, 1, 1],
+                [1, 2, 2, 3, 3, 3, 2, 2, 1],
+                [1, 2, 3, 3, 4, 3, 3, 2, 1],
+                [1, 2, 3, 4, 0, 4, 3, 2, 1],
+                [1, 2, 3, 3, 4, 3, 3, 2, 1],
+                [1, 2, 2, 3, 3, 3, 2, 2, 1],
+                [1, 2, 2, 2, 2, 2, 2, 1, 1],
+                [0, 1, 1, 1, 1, 1, 1, 1, 0],
+            ]
+        )  # TODO a renommer
+        growth = convolve2d(tf, kernel / 9000, "same")
+        # TODO ne prendre qu'une partie aleatoire de la growth avec un distribution binomiale ou expo
+
+        # on augmente le niveau de pousse
+        self.board[:, :, 22] += growth
+
+        # on recupere le niveau de pousse
+        tg = self.board[:, :, 22]
+
+        # on set les graines qui ont eclos a 1
+        tg[tg >= 1] = 1
+
+        # les autres on s'en fout
+        tg[tg < 1] = 0
+
+        # on enleve les graines qui sont sur les arbres
+        tg -= self.board[:, :, 3]
+        tg = np.clip(tg, 0, 1)
+        self.board[:, :, 3] += tg
+        self.board[:, :, 21] += tg
+
+        # on remet le niveau de pousse des graines des arbres qui on pousse a 0
+        tg = self.board[:, :, 22]
+        tg[tg >= 1] = 0
+        self.board[:, :, 22] = tg
+        
 
     def supp_trees_deracine(self): # abandonnee
         print()
-        trees = self.board[:, :, 11]
+        trees = self.board[:, :, 21]
         b = trees < 1
         trees[trees < 1] = 0
         print(b.shape)
@@ -240,6 +293,12 @@ class Map:
         for i in range(self.height):
             self.board[0, i] = 3
             self.board[self.width - 1, i] = 3
+
+    def cellLibre(self, x, y):
+        return np.count_nonzero(self.board[x, y, [0, 1, 2, 6]]) == 0
+
+    # ==============================================================================================================
+    # GUI
 
     def display(self, x1=0, y1=0, nb_cell_to_display=50, board=np.array([]), style=0):
         if board.shape == (0,):
@@ -289,11 +348,11 @@ class Map:
                     if disp_board[x, y, 0] == 1:
                         self.board_draw[x - x1, y - y1].configure(background="blue")
 
-                    elif disp_board[x, y, 0] == 2:
+                    elif disp_board[x, y, 1] == 1:
                         self.board_draw[x - x1, y - y1].configure(background="purple")
 
-                    elif disp_board[x, y, 11] > 0:
-                        nb_fruits = math.floor(disp_board[x, y, 11]) + random.randint(
+                    elif disp_board[x, y, 21] > 0:
+                        nb_fruits = math.floor(disp_board[x, y, 21]) + random.randint(
                             -1, 1
                         )
                         color = (
@@ -305,3 +364,7 @@ class Map:
                         self.board_draw[x - x1, y - y1].configure(background="white")
 
             # self.w.update()
+
+
+
+

@@ -50,7 +50,7 @@ class Bot:
             # TODO: faire une fonction move pour |eviter de se repete
             elif action == 1:  # going up
                 if self.y - 1 > 0:
-                    if self.map.cellLibre(self.x, self.y):
+                    if self.map.cellLibre(self.x, self.y - 1):
                         self.move([0, -1])
                     else:  # the bot doesn't move
                         self.incr_energy(-1)
@@ -59,7 +59,7 @@ class Bot:
 
             elif action == 2:  # going down
                 if self.y + 1 < self.map.height - 1:
-                    if self.map.cellLibre(self.x, self.y):
+                    if self.map.cellLibre(self.x, self.y + 1):
                         self.move([0, 1])
                     else:  # the bot doesn't move
                         self.incr_energy(-1)
@@ -68,7 +68,7 @@ class Bot:
 
             elif action == 3:  # going left
                 if self.x - 1 > 0:
-                    if self.map.cellLibre(self.x, self.y):
+                    if self.map.cellLibre(self.x - 1, self.y):
                         self.move([-1, 0])
                     else:  # the bot doesn't move
                         self.incr_energy(-1)
@@ -77,7 +77,7 @@ class Bot:
 
             elif action == 4:  # going right
                 if self.x + 1 < self.map.height - 1:
-                    if self.map.cellLibre(self.x, self.y):
+                    if self.map.cellLibre(self.x + 1, self.y):
                         self.move([1, 0])
                     else:  # the bot doesn't move
                         self.incr_energy(-1)
@@ -142,7 +142,7 @@ class Bot:
                 c_x = x
                 c_y = y
 
-            self.map.board[c_x, c_y, 9] = meat
+            self.map.board[c_x, c_y, 21] = meat # TODO petre mettre dans un z a part
 
     def eat(self):
         self.incr_energy(-1)  # energy lost by the consume of food
@@ -150,16 +150,17 @@ class Bot:
             self.incr_energy(4)  # energy given by eating food
 
             # the tree loose 1 fruit TODO: faire une fonction dans map pour gerer ca
-            self.map.board[self.x, self.y, 12] -= 1
-            if self.map.board[self.x, self.y, 12] < 1:
+            self.map.board[self.x, self.y, 21] -= 1
+            if self.map.board[self.x, self.y, 21] < 1:
                 self.map.board[self.x, self.y, 3] = 0
 
     def clear_bot_infos(self):
         self.map.board[self.x, self.y, 10:17] = 0
+        self.map.board[self.x, self.y, self.cellNum] = 0
 
     def move(self, action):
-        self.map.board[self.x + action[0], self.y + action[1], :4] = self.map.board[
-            self.x, self.y, :4  # change that when the amount of bot infos increase
+        self.map.board[self.x + action[0], self.y + action[1], [0, 1, 6, 10, 11, 12, 14, 15]] = self.map.board[
+            self.x, self.y, [0, 1, 6, 10, 11, 12, 14, 15]  # change that when the amount of bot infos increase
         ]
 
         self.clear_bot_infos()
@@ -198,9 +199,6 @@ class Bot:
         """ increase the bot's cd repro by nb / can be negativ """
         self.map.board[self.x, self.y, 15] += nb
 
-    def s_energy(self, nb):  # TODO comment
-        self.map.board[self.x, self.y, 10] - nb
-
     def g_info_sum_on_dir(self, col, dist, dir):
         """
         return la sum des infos de la colonne voulue a la distance voulu dans la direction voulue
@@ -219,9 +217,9 @@ class Bot:
 
         sum = self.g_infos_on_pos(x, y, col)
 
-        for i in range(1, dist//2 + 1):
-            sum += self.g_infos_on_pos(x + (a * i) - (abs_b * i), y + (b * i) - (abs_a * i), 11)
-            sum += self.g_infos_on_pos(x + (a * i) + (abs_b * i), y + (b * i) + (abs_a * i), 11)
+        for i in range(1, dist//2 + 1): # TODO optimiser ca
+            sum += self.g_infos_on_pos(x + (a * i) - (abs_b * i), y + (b * i) - (abs_a * i), col)
+            sum += self.g_infos_on_pos(x + (a * i) + (abs_b * i), y + (b * i) + (abs_a * i), col)
 
         return sum
 
@@ -297,7 +295,7 @@ class Bot:
             y = self.y
 
         if self.pos_valid(x, y):
-            return self.map.board[x, y, 5]
+            return self.map.board[x, y, 15]
         else:
             return 0
 

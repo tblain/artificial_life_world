@@ -10,6 +10,7 @@ class Herbivore(Bot):
         self.type = "H"  # => bot herbivore
 
         self.train = False
+        self.cellNum = 0
 
     def predict(self):
 

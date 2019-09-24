@@ -12,7 +12,7 @@ class NN_bot(Bot):
         if model:
             self.model = model
         else:
-            self.model = NN(25, [20, 20, 8])
+            self.model = NN(33, [10, 10, 8])
 
         # attribue le type au bot
         self.type = "B"  # => bot normal
@@ -24,6 +24,8 @@ class NN_bot(Bot):
             self.incr_energy(100)
             # lui donne le type training
             self.type = "T"
+
+        self.cellNum = 0
 
     def g_inputs(self):
         # TODO mettre en log les energis
@@ -38,30 +40,40 @@ class NN_bot(Bot):
         inputs = np.append(inputs, np.cbrt(self.sim.current_nb_step % 10))
         inputs = np.append(inputs, np.cbrt(self.sim.current_nb_step % 50))
 
-        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 4, [0, 1])))
-        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 4, [0, -1])))
-        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 4, [1, 0])))
-        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 4, [-1, 0])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 6, [0, 1])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 6, [0, -1])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 6, [1, 0])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 6, [-1, 0])))
 
-        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 3, [0, 1])))
-        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 3, [0, -1])))
-        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 3, [1, 0])))
-        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 3, [-1, 0])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 5, [0, 1])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 5, [0, -1])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 5, [1, 0])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 5, [-1, 0])))
 
-        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 2, [0, 1])))
-        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 2, [0, -1])))
-        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 2, [1, 0])))
-        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 2, [-1, 0])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 4, [0, 1])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 4, [0, -1])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 4, [1, 0])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 4, [-1, 0])))
 
-        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 1, [0, 1])))
-        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 1, [0, -1])))
-        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 1, [1, 0])))
-        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 1, [-1, 0])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 3, [0, 1])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 3, [0, -1])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 3, [1, 0])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 3, [-1, 0])))
 
-        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 0, [0, 1])))
-        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 0, [0, -1])))
-        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 0, [1, 0])))
-        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(11, 0, [-1, 0])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 2, [0, 1])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 2, [0, -1])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 2, [1, 0])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 2, [-1, 0])))
+
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 1, [0, 1])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 1, [0, -1])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 1, [1, 0])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 1, [-1, 0])))
+
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 0, [0, 1])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 0, [0, -1])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 0, [1, 0])))
+        inputs = np.append(inputs, np.cbrt(self.g_info_sum_on_dir(21, 0, [-1, 0])))
 
         # inputs = np.append(inputs, self.g_nb_fruit_on_dir([0, 1], 3))
         # inputs = np.append(inputs, self.g_nb_fruit_on_dir([0, -1], 3))
@@ -130,22 +142,22 @@ class NN_bot(Bot):
 
             # TODO: faire une fonction pour rendre ca plus propre
             if self.y - 2 > 0:
-                if self.map.board[self.x, self.y - 1, 0] == 0:
+                if self.map.cellLibre(self.x, self.y-1) == 0:
                     x = self.x
                     y = self.y - 1
 
             elif self.y + 2 < self.map.height - 1:
-                if self.map.board[self.x, self.y + 1, 0] == 0:
+                if self.map.cellLibre(self.x, self.y+1) == 0:
                     x = self.x
                     y = self.y + 1
 
             elif self.x - 2 > 0:
-                if self.map.board[self.x - 1, self.y, 0] == 0:
+                if self.map.cellLibre(self.x-1, self.y) == 0:
                     x = self.x - 1
                     y = self.y
 
             elif self.x + 2 < self.map.height - 1:
-                if self.map.board[self.x + 1, self.y, 0] == 0:
+                if self.map.cellLibre(self.x+1, self.y) == 0:
                     x = self.x + 1
                     y = self.y
             else:

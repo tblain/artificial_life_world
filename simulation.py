@@ -12,10 +12,10 @@ from tqdm import tqdm
 class Simulation:
     def __init__(self, nb_bots, nb_herbi):
         # cree la map qui va faire 100 blocs de large et de long, et avec 12 infos par cases
-        self.map = Map(300, 300, 12, self)
+        self.map = Map(300, 300, 22, self)
 
         # cree les murs
-        #self.map.spawn_outer_walls()
+        # self.map.spawn_outer_walls()
 
         # charge x vegetaux avec au max 30 fruits chacun
         self.map.load_trees(18000, 5)
@@ -53,14 +53,14 @@ class Simulation:
         # self.bots.append(Al_bot(self.map, 3, 3, self))
         # self.map.board[3, 3, 0] = 1
 
-        self.sim_speed = 2
+        self.sim_speed = 1000
 
     def load_herbivores(self, nb_herbi):
         for i in tqdm(range(nb_herbi)):
             x, y = self.g_free_xy()
 
             bot = Herbivore(self.map, x, y, self)
-            self.map.board[x, y, 0] = 2
+            self.map.board[x, y, 1] = 1
             self.bots.append(bot)
 
     def load_bots(self, nb_bots, train=False):
@@ -79,6 +79,8 @@ class Simulation:
             for bot in bots:
                 self.next_bots.append(bot)
         else:
+            print("passe on la")
+            time.sleep(10)
             x, y = self.g_free_xy()
             bot = Bot(self.map, x, y, self)
             if self.map.board[x, y, 0] == 0:
@@ -87,7 +89,7 @@ class Simulation:
 
     def step(self):
         if True or len(self.bots) > 0:
-            cd_repro_board = self.map.board[:, :, 5]
+            cd_repro_board = self.map.board[:, :, 15]
             cd_repro_board[cd_repro_board > 0] -= 1
 
             if self.current_nb_step % 10 == 1 and len(self.bots) < 100:
@@ -131,7 +133,7 @@ class Simulation:
             #        self.add_bots()
 
             if self.current_nb_step % 2 == 0:
-                self.map.load_trees(10, 1)
+                # self.map.l0oad_trees(10, 1)
                 pass
             if self.current_nb_step % 10 == 0 and len(self.bots) < 5000:
                 self.load_bots(1, train=False)
@@ -147,7 +149,7 @@ class Simulation:
                     self.nn_bots.append(bot)
                     self.map.board[bot.x, bot.y, 0] = 1
                 elif bot.type == "H":
-                    self.map.board[bot.x, bot.y, 0] = 2
+                    self.map.board[bot.x, bot.y, 1] = 1
 
             self.next_bots = []
 
@@ -172,7 +174,7 @@ class Simulation:
             self.bots = []
             self.nn_bots = []
 
-            for bot in self.train_bots:
+            for bot in self.train_bots: # TODO: faire la restructuration des z si je veux reutiliser ca
                 self.bots.append(bot)
                 bot.x, bot.y = self.g_free_xy()
                 self.map.board[bot.x, bot.y, 0] = 1
@@ -222,7 +224,7 @@ class Simulation:
             x = random.randint(1, self.map.height - 2)
             y = random.randint(1, self.map.height - 2)
 
-            while self.map.board[x, y, 0] != 0:
+            while not self.map.cellLibre(x, y):
                 x = random.randint(1, self.map.height - 2)
 
 
@@ -233,7 +235,7 @@ class Simulation:
             j = random.randint(0, dist)
 
             while (
-                not self.pos_valid(x + i, y + j) or self.map.board[x + i, y + j, 0] != 0
+                not self.pos_valid(x + i, y + j) or not self.map.cellLibre(x+i, y+j)
             ):
                 i = random.randint(-dist, dist)
                 j = random.randint(-dist, dist)

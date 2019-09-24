@@ -1,29 +1,31 @@
 num case |def
 -------------------------------------------------
-0        | type de bot : 0 => rien, 1 => nn_bot, 2 => herbivore, 3 => mur
-1        | energie du bot
-2        | repro_mode ou non : 1 ou 0
-3        | nb kill du boy
-4        | nb de pv du bot
-5        | cd de repro
-10       | presence d'arbre ou non
-11       | nb fruits de l'arbre
+0 | type de bot : 0 => rien, 1 => nn_bot, 2 => herbivore, 3 => mur
+1  | energie du bot
+2  | repro_mode ou non : 1 ou 0
+3  | nb kill du boy
+4  | nb de pv du bot
+5  | cd de repro
+10 | presence d'arbre ou non
+11 | nb fruits de l'arbre
 
 new
 num case |def
 -------------------------------------------------
-0        | type de bot : 0 => rien, 1 => nn_bot
-1        | type de bot : 0 => rien, 1 => herbivore
-2        | type de bot : 0 => rien, 1 => mur
-3        | type de bot : 0 => rien, 1 => arbre
-4        | type de bot : 0 => rien, 1 => eau
-5        | type de bot : 0 => rien, 1 => terre fertilise
-6        | type de bot : 0 => rien, 1 => voidMonster
+# type de bot / 0 => rien / 1 => type
+0  | nn_bot
+1  | herbivore
+2  | mur
+3  | arbre
+4  | eau
+5  | terre fertilise
+6  | voidMonster
 # infos bots
-10       | energie du bot
-11       | repro_mode ou non : 1 ou 0
-12       | nb kill du bot
-14       | nb de pv du bot
-15       | cd de repro
+10 | energie du bot
+11 | repro_mode ou non : 1 ou 0
+12 | nb kill du bot
+14 | nb de pv du bot
+15 | cd de repro
 # infos arbres
-21       | nb fruits de l'arbre
+21 | nb fruits de l'arbre
+22 | niveau de pousse de graine # quand arrive a 1 un arbre spawn
