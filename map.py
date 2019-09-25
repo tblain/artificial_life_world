@@ -91,7 +91,7 @@ class Map:
 
         # Scale
         self.scale_nb = Scale(self.master, from_=0, to=1000, orient=HORIZONTAL)
-        self.scale_nb.set(25)
+        self.scale_nb.set(1000)
         self.scale_nb.grid(row=5, column=0)
 
     # ====================================================================================
@@ -224,6 +224,10 @@ class Map:
 
         # print(growth)
         self.board[:, :, 21] = np.clip(self.board[:, :, 21] + growth, 0, max_nb_fruits)
+        for l in self.board[:, :, 21]:
+            for a in l:
+                if(0 < a < 1):
+                    print(a)
         # print("fruits:", self.board[10, 10, 11])
 
     def spawn_trees(self):
@@ -249,17 +253,14 @@ class Map:
                 [0, 1, 1, 1, 1, 1, 1, 1, 0],
             ]
         )  # TODO a renommer
-        growth = convolve2d(tf, kernel / 9000, "same")
+        growth = convolve2d(tf, kernel / 900, "same")
         # TODO ne prendre qu'une partie aleatoire de la growth avec un distribution binomiale ou expo
 
         # on augmente le niveau de pousse
-        self.board[:, :, 22] += growth
-
-        # on recupere le niveau de pousse
-        tg = self.board[:, :, 22]
+        tg = self.board[:, :, 22] + growth
 
         # on set les graines qui ont eclos a 1
-        tg[tg >= 1] = 1
+        tg = np.clip(tg, 0, 1)
 
         # les autres on s'en fout
         tg[tg < 1] = 0
@@ -267,23 +268,24 @@ class Map:
         # on enleve les graines qui sont sur les arbres
         tg -= self.board[:, :, 3]
         tg = np.clip(tg, 0, 1)
+        for l in self.board[:, :, 3]:
+            for a in l:
+                if(0 < a < 1):
+                    print(a)
+
         self.board[:, :, 3] += tg
         self.board[:, :, 21] += tg
 
         # on remet le niveau de pousse des graines des arbres qui on pousse a 0
-        tg = self.board[:, :, 22]
-        tg[tg >= 1] = 0
-        self.board[:, :, 22] = tg
+        self.board[:, :, 22] -= tg
         
 
     def supp_trees_deracine(self): # abandonnee
         print()
         trees = self.board[:, :, 21]
-        b = trees < 1
-        trees[trees < 1] = 0
-        print(b.shape)
-        print(self.board[b].reshape(300, 300, 12))
-        self.board[:, :, 11] = trees
+        trees[trees >= 1] = 0
+        trees[0 < trees < 1] = 1
+        self.board[:, :, 21] = trees
 
     def spawn_outer_walls(self):
         for i in range(self.width):

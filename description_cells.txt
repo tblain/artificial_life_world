@@ -1,17 +1,5 @@
 num case |def
 -------------------------------------------------
-0 | type de bot : 0 => rien, 1 => nn_bot, 2 => herbivore, 3 => mur
-1  | energie du bot
-2  | repro_mode ou non : 1 ou 0
-3  | nb kill du boy
-4  | nb de pv du bot
-5  | cd de repro
-10 | presence d'arbre ou non
-11 | nb fruits de l'arbre
-
-new
-num case |def
--------------------------------------------------
 # type de bot / 0 => rien / 1 => type
 0  | nn_bot
 1  | herbivore
@@ -28,4 +16,5 @@ num case |def
 15 | cd de repro
 # infos arbres
 21 | nb fruits de l'arbre
-22 | niveau de pousse de graine # quand arrive a 1 un arbre spawn
+# quand arrive a 1 un arbre spawn
+22 | niveau de pousse de graine 

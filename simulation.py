@@ -12,7 +12,7 @@ from tqdm import tqdm
 class Simulation:
     def __init__(self, nb_bots, nb_herbi):
         # cree la map qui va faire 100 blocs de large et de long, et avec 12 infos par cases
-        self.map = Map(300, 300, 22, self)
+        self.map = Map(300, 300, 23, self)
 
         # cree les murs
         # self.map.spawn_outer_walls()
@@ -101,7 +101,7 @@ class Simulation:
                 if i < 5:
                     # affiche des infos sur les 5 bots en vie les plus vieux
                     print(
-                        bot.type, ": ", bot.nb_steps, " / ", bot.g_energy(), end=" | "
+                        bot.type, ": ", bot.nb_steps, " / ", bot.g_energy(), " / ", self.map.board[bot.x, bot.y, 21], end=" | "
                     )
                 if bot.alive:
                     bot.step()
@@ -135,13 +135,12 @@ class Simulation:
             if self.current_nb_step % 2 == 0:
                 # self.map.l0oad_trees(10, 1)
                 pass
-            if self.current_nb_step % 10 == 0 and len(self.bots) < 5000:
-                self.load_bots(1, train=False)
+            if self.current_nb_step % 1 == 0 and len(self.bots) < 100:
+                self.load_bots(200 - len(self.bots), train=False)
                 pass
-            if self.current_nb_step % 5 == 0:
+            if self.current_nb_step % 15 == 0:
                 self.map.tree_growth()
-
-            self.map.spawn_trees()
+                self.map.spawn_trees()
 
             for bot in self.next_bots:
                 self.bots.append(bot)
