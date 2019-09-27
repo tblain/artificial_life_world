@@ -16,6 +16,7 @@ from tkinter import (
     Checkbutton,
     Scale,
     HORIZONTAL,
+    Spinbox,
 )
 
 
@@ -89,31 +90,38 @@ class Map:
         self.checkbutton_train.select()
         self.checkbutton_train.grid(row=4, column=0)
 
+        # Spin box
+        self.spin_nb = Spinbox(self.master, from_=0, to_=1000000)
+        self.spin_nb.grid(row=5, column=0)
         # Scale
-        self.scale_nb = Scale(self.master, from_=0, to=1000, orient=HORIZONTAL)
-        self.scale_nb.set(1000)
-        self.scale_nb.grid(row=5, column=0)
+        # self.scale_nb = Scale(self.master, from_=0, to=1000, orient=HORIZONTAL)
+        # self.scale_nb.set(1000)
+        # self.scale_nb.grid(row=5, column=0)
 
     # ====================================================================================
     # Handlers
 
+    def get_nb(self):
+        # return 100
+        return int(self.spin_nb.get())
+
     def spawn_child(self):
-        self.sim.spawn_child(self.scale_nb.get(), train=(self.v_train_bots == 1))
+        self.sim.spawn_child(self.get_nb(), train=(self.v_train_bots == 1))
 
     def load_bots(self):
-        self.sim.load_bots(self.scale_nb.get(), train=(self.v_train_bots == 1))
+        self.sim.load_bots(self.get_nb(), train=(self.v_train_bots == 1))
 
     def set_sim_speed(self):
-        self.sim.sim_speed = self.scale_nb.get()
+        self.sim.sim_speed = self.get_nb()
 
     def load_tree_event(self):
-        nb_trees = self.scale_nb.get()
+        nb_trees = self.get_nb()
         nb_fruits = 1
 
         self.load_trees(nb_trees, nb_fruits)
 
     def load_herbivores(self):
-        self.sim.load_herbivores(self.scale_nb.get())
+        self.sim.load_herbivores(self.get_nb())
 
     def toggle_display(self):
         self.sim.display = not self.sim.display
@@ -205,10 +213,11 @@ class Map:
         # growth = p1 * tf * tf + p2 * tf * tf * tf
 
         # growth sinusoidal
-        growth = np.sin(tf / 18)
+        growth = np.sin(tf / 18) * 10
 
         # on limite la growth des trees en fonction de la growth des arbres voisins
 
+        """
         kernel = np.array(
             [
                 [1, 2, 3, 2, 1],
@@ -218,16 +227,29 @@ class Map:
                 [1, 2, 3, 2, 1],
             ]
         )  # TODO a renommer
-        growth -= convolve2d(growth, kernel / 90, "same")
 
-        growth = np.clip(growth, 0, 2)
+        """
+        kernel = np.array(
+            [
+                [1, 2, 2, 2, 2, 2, 1],
+                [2, 2, 3, 3, 3, 2, 2],
+                [2, 3, 3, 4, 3, 3, 2],
+                [2, 3, 4, 0, 4, 3, 2],
+                [2, 3, 3, 4, 3, 3, 2],
+                [2, 2, 3, 3, 3, 2, 2],
+                [2, 2, 2, 2, 2, 2, 1],
+            ]
+        )  # TODO a renommer
+        growth -= (convolve2d(growth, kernel / 500, "same") + 0.3) + np.random.random((self.height, self.width)) / 10
+
+        growth = np.clip(growth, 0, 1)
 
         # print(growth)
         self.board[:, :, 21] = np.clip(self.board[:, :, 21] + growth, 0, max_nb_fruits)
-        for l in self.board[:, :, 21]:
-            for a in l:
-                if(0 < a < 1):
-                    print(a)
+        # for l in self.board[:, :, 21]:
+            # for a in l:
+                # if(0 < a < 1):
+                    # print(a)
         # print("fruits:", self.board[10, 10, 11])
 
     def spawn_trees(self):
@@ -242,22 +264,21 @@ class Map:
 
         kernel = np.array(
             [
-                [0, 1, 1, 1, 1, 1, 1, 1, 0],
-                [1, 1, 2, 2, 2, 2, 2, 1, 1],
-                [1, 2, 2, 3, 3, 3, 2, 2, 1],
-                [1, 2, 3, 3, 4, 3, 3, 2, 1],
-                [1, 2, 3, 4, 0, 4, 3, 2, 1],
-                [1, 2, 3, 3, 4, 3, 3, 2, 1],
-                [1, 2, 2, 3, 3, 3, 2, 2, 1],
-                [1, 2, 2, 2, 2, 2, 2, 1, 1],
-                [0, 1, 1, 1, 1, 1, 1, 1, 0],
+                [1, 4, 4, 4, 4, 4, 1],
+                [4, 4, 9, 9, 9, 2, 4],
+                [4, 9, 9,16, 9, 9, 4],
+                [4, 9,16, 0,16, 9, 4],
+                [4, 9, 9,16, 9, 9, 4],
+                [4, 4, 9, 9, 9, 2, 4],
+                [1, 4, 4, 4, 4, 4, 1],
             ]
         )  # TODO a renommer
-        growth = convolve2d(tf, kernel / 900, "same")
+        growth = convolve2d(tf, kernel / 90000, "same") - np.random.random((self.height, self.width)) / 100
         # TODO ne prendre qu'une partie aleatoire de la growth avec un distribution binomiale ou expo
 
         # on augmente le niveau de pousse
-        tg = self.board[:, :, 22] + growth
+        self.board[:, :, 22] += growth
+        tg = self.board[:, :, 22]
 
         # on set les graines qui ont eclos a 1
         tg = np.clip(tg, 0, 1)
@@ -268,10 +289,10 @@ class Map:
         # on enleve les graines qui sont sur les arbres
         tg -= self.board[:, :, 3]
         tg = np.clip(tg, 0, 1)
-        for l in self.board[:, :, 3]:
-            for a in l:
-                if(0 < a < 1):
-                    print(a)
+        # for l in self.board[:, :, 3]:
+            # for a in l:
+                # if(0 < a < 1):
+                    # print(a)
 
         self.board[:, :, 3] += tg
         self.board[:, :, 21] += tg
@@ -350,15 +371,15 @@ class Map:
                     if disp_board[x, y, 0] == 1:
                         self.board_draw[x - x1, y - y1].configure(background="blue")
 
-                    elif disp_board[x, y, 1] == 1:
-                        self.board_draw[x - x1, y - y1].configure(background="purple")
+                    elif disp_board[x, y, 2] == 2:
+                        self.board_draw[x - x1, y - y1].configure(background="red")
 
                     elif disp_board[x, y, 21] > 0:
                         nb_fruits = math.floor(disp_board[x, y, 21]) + random.randint(
                             -1, 1
                         )
                         color = (
-                            "#300" + "{:03d}".format(int(nb_fruits * 15 + 300)) + "300"
+                            "#300" + "{:03d}".format(int(nb_fruits * 12 + 300)) + "300"
                         )
                         self.board_draw[x - x1, y - y1].configure(background=color)
 
@@ -366,7 +387,3 @@ class Map:
                         self.board_draw[x - x1, y - y1].configure(background="white")
 
             # self.w.update()
-
-
-
-
