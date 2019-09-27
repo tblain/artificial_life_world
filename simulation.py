@@ -9,16 +9,17 @@ from genetic import croisement, mutate
 
 from tqdm import tqdm
 
+
 class Simulation:
     def __init__(self, nb_bots, nb_herbi):
         # cree la map qui va faire 100 blocs de large et de long, et avec 12 infos par cases
-        self.map = Map(300, 300, 23, self)
+        self.map = Map(350, 350, 23, self)
 
         # cree les murs
         # self.map.spawn_outer_walls()
 
         # charge x vegetaux avec au max 30 fruits chacun
-        self.map.load_trees(18000, 5)
+        self.map.load_trees(1800, 5)
 
         # la simuation commence sans l'affichage, il peut etre activer par la suite
         self.display = True
@@ -92,7 +93,7 @@ class Simulation:
             cd_repro_board = self.map.board[:, :, 15]
             cd_repro_board[cd_repro_board > 0] -= 1
 
-            if self.current_nb_step % 10 == 1 and len(self.bots) < 100:
+            if False and self.current_nb_step % 10 == 1 and len(self.bots) < 0:
                 self.spawn_child()
                 pass
 
@@ -101,7 +102,7 @@ class Simulation:
                 if i < 5:
                     # affiche des infos sur les 5 bots en vie les plus vieux
                     print(
-                        bot.type, ": ", bot.nb_steps, " / ", bot.g_energy(), " / ", self.map.board[bot.x, bot.y, 21], end=" | "
+                        bot.type, ": ", bot.nb_steps, " / ", bot.g_energy(), " / ", end=" | "
                     )
                 if bot.alive:
                     bot.step()
@@ -135,10 +136,10 @@ class Simulation:
             if self.current_nb_step % 2 == 0:
                 # self.map.l0oad_trees(10, 1)
                 pass
-            if self.current_nb_step % 1 == 0 and len(self.bots) < 100:
-                self.load_bots(200 - len(self.bots), train=False)
+            if self.current_nb_step % 1 == 0 and len(self.bots) < 0:
+                self.load_bots(25 - len(self.bots), train=False)
                 pass
-            if self.current_nb_step % 15 == 0:
+            if self.current_nb_step % 3 == 0:
                 self.map.tree_growth()
                 self.map.spawn_trees()
 
@@ -247,32 +248,32 @@ class Simulation:
     def play(self):
         print("La Simulation commence")
 
-        for i in range(1000000000000000000000000):
+        for i in range(1000000000000000000):
             print("=================")
             print("Total max nb steps: ", self.total_nb_step)
-            print("Total elder: ", self.total_max_bot_steps)
-            print("Total death: ", self.total_nb_death)
+            print("Total elder: ", self.total_max_bot_steps, " || Total death: ", self.total_nb_death)
             print("------")
             print("Generation ", self.nb_generation)
-            print("Current nb step: ", self.current_nb_step)
-            print("Current elder: ", self.current_max_bot_steps)
-            print("Current death: ", self.current_nb_death)
+            print("Current nb step: ", self.current_nb_step, " || Current elder: ", self.current_max_bot_steps, " || Current death: ", self.current_nb_death)
             print("Nb bots: ", len(self.bots))
             print("------")
-            if len(self.nn_bots) > 0:
-                print("Elder: x=", self.nn_bots[0].x, " / y=", self.nn_bots[0].y)
-                x1 = max(self.nn_bots[0].x - 20, 0)
-                y1 = max(self.nn_bots[0].y - 20, 0)
+            if len(self.bots) > 0:
+                print("Elder: x=", self.bots[0].x, " / y=", self.bots[0].y)
+                x1 = max(self.bots[0].x - 20, 0)
+                y1 = max(self.bots[0].y - 20, 0)
             else:
                 x1 = 0
                 y1 = 0
+
+            for i in range(len(self.bots) - 1, -1, -1):
+                if i < 5:
+                    print(self.bots[i].type, ":", self.bots[i].nb_steps, "/", self.bots[i].g_energy(), end=" | ")
 
             if self.display:
                 self.map.display(style=2, nb_cell_to_display=40, x1=x1, y1=y1)
 
             self.step()
             self.map.w.update()
-            print()
             print()
             # time.sleep(0.5)
             self.current_nb_step += 1
