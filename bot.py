@@ -32,6 +32,40 @@ class Bot:
         # chaque type de bot a une coordonnee z qui lui est associe
         self.cellNum = 0
 
+        # ---------------------------------
+        # e => energy when absorbing ...
+        self.e_fruit = 6  # energy donne en absorbant un fruit
+        self.e_meat = 1  # energy donne en absorbant de la viande
+
+        # ---------------------------------
+        # c => cost in energy when ...
+        self.c_move = 1  # cout de bouger
+        self.c_rien = 1  # cout de rien faire
+
+        # ---------------------------------
+        # t => treshold (palier) for ...
+
+        # palier avant lancer une reproduction
+        self.t_repro = 300  
+
+        self.t_need_to_eat_0 = 0
+        self.t_need_to_eat_1_nb_energy = 30
+
+        # besoin de manger mineur / c'est + pour accumuler de l'energie
+        self.t_need_to_eat_1 = 300
+        # quand le bot a un need_to_eat de 1 quelle quantite d'energie sur pose est ce que le bot mange
+        # (le but est d'eviter de trop defoncer les arbres)
+        self.t_need_to_eat_1_nb_energy = 10
+
+        # vraiment besoin de manger
+        self.t_need_to_eat_2 = 20
+
+        # nombre de fruits dans la zone acceptable
+        # Le bot a beaucoup d'energie et cherche une zone avec beaucoup d'energie
+        # pour y rester et avoir des arbres qui produisent en grandes quantite
+        # A partir de cette quantite il est satisfait de sa zone et donc peux manger
+        self.t_fruits_in_zone = 100
+
     def step(self):
         if self.g_energy() <= 0:
             self.alive = False
@@ -147,7 +181,7 @@ class Bot:
     def eat(self):
         self.incr_energy(-1)  # energy lost by the consume of food
         if self.g_nb_fruit_on_pos() >= 1:
-            self.incr_energy(4)  # energy given by eating food
+            self.incr_energy(self.fruit_energy)  # energy given by eating food
 
             # the tree loose 1 fruit TODO: faire une fonction dans map pour gerer ca
             self.map.board[self.x, self.y, 21] -= 1
@@ -303,6 +337,7 @@ class Bot:
         return 0 <= x < self.map.width and 0 <= y < self.map.height
 
     def g_infos_on_pos(self, x=-1, y=-1, col=-1):
+        # TODO: a optimiser
         if x == -1:
             x = self.x
             y = self.y

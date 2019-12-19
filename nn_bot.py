@@ -12,7 +12,7 @@ class NN_bot(Bot):
         if model:
             self.model = model
         else:
-            self.model = NN(33, [10, 10, 8])
+            self.model = NN(33, [10, 8])
 
         # attribue le type au bot
         self.type = "B"  # => bot normal
@@ -26,6 +26,13 @@ class NN_bot(Bot):
             self.type = "T"
 
         self.cellNum = 0
+
+        self.e_fruit = 4  # energy donne en absorbant un fruit
+        self.e_meat = 20  # energy donne en absorbant de la viande
+        self.c_move = 1  # cout de bouger
+        self.c_rien = 1  # cout de rien faire
+
+        #TODO rajouter et gerer les variables pour la mitose
 
     def g_inputs(self):
         # TODO mettre en log les energis

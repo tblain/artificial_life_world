@@ -2,20 +2,22 @@ from bot import Bot
 import numpy as np
 
 
-class Herbivore(Bot):
+class Carnivore(Bot):
     def __init__(self, map, x, y, sim):
         Bot.__init__(self, map, x, y, sim)
 
         # attribue le type au bot
-        self.type = "H"  # => bot herbivore
+        self.type = "C"  # => bot herbivore
 
         self.train = False
-        self.cellNum = 1
-
+        self.cellNum = 2
+        
+        self.fruit_energy = 3
+        self.meat_energy = 20
         # ---------------------------------
         # e => energy when absorbing ...
-        self.e_fruit = 6  # energy donne en absorbant un fruit
-        self.e_meat = 1  # energy donne en absorbant de la viande
+        self.e_fruit = 3  # energy donne en absorbant un fruit
+        self.e_meat = 20  # energy donne en absorbant de la viande
 
         # ---------------------------------
         # c => cost in energy when ...
@@ -46,8 +48,9 @@ class Herbivore(Bot):
         # A partir de cette quantite il est satisfait de sa zone et donc peux manger
         self.t_fruits_in_zone = 100
 
+
     def predict(self):
-        if self.g_energy() > self.t_repro and self.can_reproduce(taille_limite=True):
+        if self.g_energy() > 300 and self.can_reproduce(taille_limite=True):
             # actions[6] = 1000
             return 6
 
@@ -55,10 +58,10 @@ class Herbivore(Bot):
         if need_to_eat > 0:
             if need_to_eat >= 2 and self.g_nb_fruit_on_pos() > 0:
                 return 7
-            if need_to_eat >= 1 and self.g_nb_fruit_on_pos() > self.t_need_to_eat_1_nb_energy:
+            if need_to_eat >= 1 and self.g_nb_fruit_on_pos() > 10:
                 return 7
             else:
-                if self.g_fruits_in_zone(6) > self.t_fruits_in_zone and self.g_nb_fruit_on_pos() > self.t_need_to_eat_0:
+                if self.g_fruits_in_zone(6) > 100 and self.g_nb_fruit_on_pos() > 30:
                     return 7
                 else:
                     return self.predict_move()
@@ -94,10 +97,11 @@ class Herbivore(Bot):
 
         return np.argmax(actions)
 
+
     def g_need_to_eat(self):
-        if self.g_energy() < self.t_need_to_eat_2:
+        if self.g_energy() < 20:
             return 2
-        elif self.g_energy() <= self.t_need_to_eat_1:
+        elif self.g_energy() < 100:
             return 1
         else:
             return 0
