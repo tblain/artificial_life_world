@@ -17,4 +17,4 @@ num case |def
 # infos arbres
 21 | nb fruits de l'arbre
 # quand arrive a 1 un arbre spawn
-22 | niveau de pousse de graine 
+22 | niveau de pousse de graine

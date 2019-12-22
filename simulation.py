@@ -32,13 +32,17 @@ class Simulation:
         self.nn_bots = []
 
         # self.load_bots(10, train=True)
-        self.load_bots(nb_bots)
+        self.load_bots(nb_bots, "N")
 
         self.load_herbivores(nb_herbi)
 
         self.total_nb_step = 0
         self.total_max_bot_steps = 0
         self.total_nb_death = 0
+
+        # fais on spawn des bots si il y a moins de x bots
+        self.min_bot = False
+        self.min_bot_nb = 100
 
         # duree totale de la generation actuelle
         self.current_nb_step = 0
@@ -50,6 +54,9 @@ class Simulation:
 
         # list des bots qui vont etre charger a l'etape suivante
         self.next_bots = []
+
+        # spawn automatique et "artificiel" d'arbres
+        self.automatique_load_trees = False # desactive car les arbres s'en chargent naturellement
 
         # self.bots.append(Al_bot(self.map, 3, 3, self))
         # self.map.board[3, 3, 0] = 1
@@ -64,11 +71,13 @@ class Simulation:
             self.map.board[x, y, 1] = 1
             self.bots.append(bot)
 
-    def load_bots(self, nb_bots, train=False):
+    def load_bots(self, nb_bots, type, train=False):
         for i in range(nb_bots):
             x, y = self.g_free_xy()
 
-            bot = NN_bot(self.map, x, y, self, train=train)
+            if type == "N":
+                bot = NN_bot(self.map, x, y, self, train=train)
+
             if train:
                 self.train_bots.append(bot)
             self.map.board[x, y, 0] = 1
@@ -80,8 +89,6 @@ class Simulation:
             for bot in bots:
                 self.next_bots.append(bot)
         else:
-            print("passe on la")
-            time.sleep(10)
             x, y = self.g_free_xy()
             bot = Bot(self.map, x, y, self)
             if self.map.board[x, y, 0] == 0:
@@ -90,20 +97,19 @@ class Simulation:
 
     def step(self):
         if True or len(self.bots) > 0:
+            # incremente le cd de reproduction pour tous les bots
             cd_repro_board = self.map.board[:, :, 15]
             cd_repro_board[cd_repro_board > 0] -= 1
 
-            if False and self.current_nb_step % 10 == 1 and len(self.bots) < 0:
+            # spawn de bot pour combler un manque de bot si les params le demande
+            if self.min_bot and self.current_nb_step % 10 == 1 and len(self.bots) < self.min_bot_nb:
                 self.spawn_child()
-                pass
 
             for i in range(len(self.bots) - 1, -1, -1):
                 bot = self.bots[i]
                 if i < 5:
                     # affiche des infos sur les 5 bots en vie les plus vieux
-                    print(
-                        bot.type, ": ", bot.nb_steps, " / ", bot.g_energy(), " / ", end=" | "
-                    )
+                    print(bot.type, ": ", bot.nb_steps, " / ", bot.g_energy(), " / ", end=" | ")
                 if bot.alive:
                     bot.step()
                 else:
@@ -127,17 +133,11 @@ class Simulation:
                     # supprime le bot et ses infos
                     bot.clear_bot_infos()
 
-            #self.map.supp_trees_deracine()
-
-            # if len(self.bots) < 1000:
-            #    for i in range(1000 - len(self.bots)):
-            #        self.add_bots()
-
-            if self.current_nb_step % 2 == 0:
-                # self.map.l0oad_trees(10, 1)
-                pass
+            # fais spawn des arbres
+            if self.automatique_load_trees and self.current_nb_step % 2 == 0:
+                self.map.load_trees(10, 1)
             if self.current_nb_step % 1 == 0 and len(self.bots) < 0:
-                self.load_bots(25 - len(self.bots), train=False)
+                self.load_bots(25 - len(self.bots), "H",train=False)
                 pass
             if self.current_nb_step % 3 == 0:
                 self.map.tree_growth()
@@ -208,8 +208,7 @@ class Simulation:
                 child = NN_bot(self.map, x, y, self, train=train)
                 child.model.weights = child_weights
                 self.map.board[x, y, 0] = 1
-                self.bots.append(child)
-                self.nn_bots.append(child)
+                self.next_bots.append(child)
 
         else:
             self.load_bots(nb, train)
@@ -275,7 +274,6 @@ class Simulation:
             self.step()
             self.map.w.update()
             print()
-            # time.sleep(0.5)
             self.current_nb_step += 1
             time.sleep(1/self.sim_speed)
 

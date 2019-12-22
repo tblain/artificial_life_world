@@ -26,7 +26,7 @@ class Herbivore(Bot):
         # t => treshold (palier) for ...
 
         # palier avant lancer une reproduction
-        self.t_repro = 300  
+        self.t_repro = 300
 
         self.t_need_to_eat_0 = 0
         self.t_need_to_eat_1_nb_energy = 30

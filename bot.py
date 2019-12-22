@@ -46,7 +46,7 @@ class Bot:
         # t => treshold (palier) for ...
 
         # palier avant lancer une reproduction
-        self.t_repro = 300  
+        self.t_repro = 300
 
         self.t_need_to_eat_0 = 0
         self.t_need_to_eat_1_nb_energy = 30
@@ -65,6 +65,8 @@ class Bot:
         # pour y rester et avoir des arbres qui produisent en grandes quantite
         # A partir de cette quantite il est satisfait de sa zone et donc peux manger
         self.t_fruits_in_zone = 100
+
+        self.type = "B"
 
     def step(self):
         if self.g_energy() <= 0:
@@ -181,7 +183,7 @@ class Bot:
     def eat(self):
         self.incr_energy(-1)  # energy lost by the consume of food
         if self.g_nb_fruit_on_pos() >= 1:
-            self.incr_energy(self.fruit_energy)  # energy given by eating food
+            self.incr_energy(self.e_fruit)  # energy given by eating food
 
             # the tree loose 1 fruit TODO: faire une fonction dans map pour gerer ca
             self.map.board[self.x, self.y, 21] -= 1
